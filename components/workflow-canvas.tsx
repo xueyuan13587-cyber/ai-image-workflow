@@ -4,7 +4,6 @@ import "@xyflow/react/dist/style.css";
 
 import { Controls, ReactFlow, type NodeTypes } from "@xyflow/react";
 import {
-  Braces,
   Coins,
   Download,
   History,
@@ -168,7 +167,6 @@ export function WorkflowCanvas({ username }: { username?: string }) {
     edges,
     history,
     error,
-    lastRun,
     onNodesChange,
     onEdgesChange,
     onConnect,
@@ -180,7 +178,7 @@ export function WorkflowCanvas({ username }: { username?: string }) {
     setRunResult,
     toWorkflowJson
   } = useWorkflowStore();
-  const [panel, setPanel] = useState<"history" | "json" | null>(null);
+  const [panel, setPanel] = useState<"history" | null>(null);
   const [account, setAccount] = useState<AccountState | null>(null);
 
   useEffect(() => {
@@ -203,8 +201,6 @@ export function WorkflowCanvas({ username }: { username?: string }) {
   useEffect(() => {
     refreshAccount();
   }, []);
-
-  const workflowJson = JSON.stringify(toWorkflowJson(), null, 2);
 
   async function runWorkflow() {
     setRunState("running");
@@ -283,14 +279,6 @@ export function WorkflowCanvas({ username }: { username?: string }) {
           <button
             className="tapnow-pill"
             type="button"
-            onClick={() => setPanel((value) => (value === "json" ? null : "json"))}
-            title="显示或隐藏工作流 JSON"
-          >
-            <Braces className="h-4 w-4" />
-          </button>
-          <button
-            className="tapnow-pill"
-            type="button"
             onClick={logout}
             title="退出登录"
           >
@@ -341,6 +329,7 @@ export function WorkflowCanvas({ username }: { username?: string }) {
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             fitView
+            proOptions={{ hideAttribution: true }}
             className="tapnow-canvas"
           >
             <Controls position="bottom-left" />
@@ -354,27 +343,6 @@ export function WorkflowCanvas({ username }: { username?: string }) {
             onClear={clearHistory}
             onClose={() => setPanel(null)}
           />
-        )}
-
-        {panel === "json" && (
-          <aside className="absolute right-6 top-24 z-30 max-h-[calc(100vh-8rem)] w-[420px] overflow-auto rounded-2xl border border-white/10 bg-black/70 text-white shadow-2xl backdrop-blur-xl">
-            <div className="border-b border-white/10 p-4">
-              <h2 className="text-sm font-semibold">工作流 JSON</h2>
-              <p className="mt-1 text-xs leading-5 text-white/45">
-                运行时前端会把这份节点和连线数据发送到后端。
-              </p>
-            </div>
-            <pre className="whitespace-pre-wrap p-4 text-xs leading-5 text-white/60">
-              {workflowJson}
-            </pre>
-            {lastRun && (
-              <div className="border-t border-white/10 p-4 text-xs leading-5 text-white/55">
-                <div className="font-semibold text-white">上次运行</div>
-                <div>服务商：{lastRun.result.provider}</div>
-                <div>模型：{lastRun.result.model}</div>
-              </div>
-            )}
-          </aside>
         )}
       </main>
     </div>
