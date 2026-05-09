@@ -37,6 +37,12 @@ export type ChannelConfig = {
   enabled: boolean;
 };
 
+export type PricingRules = {
+  resolutionMultipliers: Record<"1K" | "2K" | "4K", number>;
+  detailMultipliers: Record<"low" | "medium" | "high", number>;
+  featureMultipliers: Record<GenerationFeature, number>;
+};
+
 export type GenerationTask = {
   id: string;
   userId: string;
@@ -140,6 +146,39 @@ const defaultChannels: ChannelConfig[] = [
   }
 ];
 
+const defaultPricingRules: PricingRules = {
+  resolutionMultipliers: {
+    "1K": 1,
+    "2K": 2,
+    "4K": 4
+  },
+  detailMultipliers: {
+    low: 1,
+    medium: 1.4,
+    high: 2
+  },
+  featureMultipliers: {
+    "text-to-image": 1,
+    "image-to-image": 1.25,
+    "reference-image": 1.25,
+    inpaint: 1.4,
+    outpaint: 1.4,
+    upscale: 1.5,
+    "multi-image-fusion": 1.6,
+    batch: 1.2
+  }
+};
+
+function toPositiveNumber(value: unknown, fallback: number) {
+  const numberValue = Number(value);
+
+  if (!Number.isFinite(numberValue) || numberValue <= 0) {
+    return fallback;
+  }
+
+  return Math.round(numberValue * 100) / 100;
+}
+
 function normalizeModels(models: unknown): ModelPricing[] {
   if (!Array.isArray(models)) {
     return defaultModels;
@@ -186,6 +225,78 @@ function normalizeChannels(channels: unknown): ChannelConfig[] {
   });
 }
 
+function normalizePricingRules(rules: unknown): PricingRules {
+  const stored =
+    typeof rules === "object" && rules !== null
+      ? (rules as Partial<PricingRules>)
+      : {};
+
+  return {
+    resolutionMultipliers: {
+      "1K": toPositiveNumber(
+        stored.resolutionMultipliers?.["1K"],
+        defaultPricingRules.resolutionMultipliers["1K"]
+      ),
+      "2K": toPositiveNumber(
+        stored.resolutionMultipliers?.["2K"],
+        defaultPricingRules.resolutionMultipliers["2K"]
+      ),
+      "4K": toPositiveNumber(
+        stored.resolutionMultipliers?.["4K"],
+        defaultPricingRules.resolutionMultipliers["4K"]
+      )
+    },
+    detailMultipliers: {
+      low: toPositiveNumber(
+        stored.detailMultipliers?.low,
+        defaultPricingRules.detailMultipliers.low
+      ),
+      medium: toPositiveNumber(
+        stored.detailMultipliers?.medium,
+        defaultPricingRules.detailMultipliers.medium
+      ),
+      high: toPositiveNumber(
+        stored.detailMultipliers?.high,
+        defaultPricingRules.detailMultipliers.high
+      )
+    },
+    featureMultipliers: {
+      "text-to-image": toPositiveNumber(
+        stored.featureMultipliers?.["text-to-image"],
+        defaultPricingRules.featureMultipliers["text-to-image"]
+      ),
+      "image-to-image": toPositiveNumber(
+        stored.featureMultipliers?.["image-to-image"],
+        defaultPricingRules.featureMultipliers["image-to-image"]
+      ),
+      "reference-image": toPositiveNumber(
+        stored.featureMultipliers?.["reference-image"],
+        defaultPricingRules.featureMultipliers["reference-image"]
+      ),
+      inpaint: toPositiveNumber(
+        stored.featureMultipliers?.inpaint,
+        defaultPricingRules.featureMultipliers.inpaint
+      ),
+      outpaint: toPositiveNumber(
+        stored.featureMultipliers?.outpaint,
+        defaultPricingRules.featureMultipliers.outpaint
+      ),
+      upscale: toPositiveNumber(
+        stored.featureMultipliers?.upscale,
+        defaultPricingRules.featureMultipliers.upscale
+      ),
+      "multi-image-fusion": toPositiveNumber(
+        stored.featureMultipliers?.["multi-image-fusion"],
+        defaultPricingRules.featureMultipliers["multi-image-fusion"]
+      ),
+      batch: toPositiveNumber(
+        stored.featureMultipliers?.batch,
+        defaultPricingRules.featureMultipliers.batch
+      )
+    }
+  };
+}
+
 function now() {
   return new Date().toISOString();
 }
@@ -230,12 +341,20 @@ export async function getTemplates() {
   );
 }
 
+export async function getPricingRules() {
+  return normalizePricingRules(await storeGet<PricingRules>(adminListKey("pricingRules")));
+}
+
 export async function saveModelPricing(models: ModelPricing[]) {
   await storeSet(adminListKey("models"), normalizeModels(models));
 }
 
 export async function saveChannelConfigs(channels: ChannelConfig[]) {
   await storeSet(adminListKey("channels"), normalizeChannels(channels));
+}
+
+export async function savePricingRules(rules: PricingRules) {
+  await storeSet(adminListKey("pricingRules"), normalizePricingRules(rules));
 }
 
 export async function getUserCredits(userId: string) {
@@ -286,25 +405,23 @@ export async function updateTask(task: GenerationTask) {
   });
 }
 
-function getResolutionMultiplier(resolution: string) {
-  if (resolution === "4K") return 4;
-  if (resolution === "2K") return 2;
-  return 1;
+function getResolutionMultiplier(
+  resolution: string,
+  rules: PricingRules
+) {
+  if (resolution === "4K") return rules.resolutionMultipliers["4K"];
+  if (resolution === "2K") return rules.resolutionMultipliers["2K"];
+  return rules.resolutionMultipliers["1K"];
 }
 
-function getDetailMultiplier(detail: string) {
-  if (detail === "high") return 2;
-  if (detail === "medium") return 1.4;
-  return 1;
+function getDetailMultiplier(detail: string, rules: PricingRules) {
+  if (detail === "high") return rules.detailMultipliers.high;
+  if (detail === "medium") return rules.detailMultipliers.medium;
+  return rules.detailMultipliers.low;
 }
 
-function getFeatureMultiplier(feature: GenerationFeature) {
-  if (feature === "upscale") return 1.5;
-  if (feature === "inpaint" || feature === "outpaint") return 1.4;
-  if (feature === "multi-image-fusion") return 1.6;
-  if (feature === "batch") return 1.2;
-  if (feature === "reference-image" || feature === "image-to-image") return 1.25;
-  return 1;
+function getFeatureMultiplier(feature: GenerationFeature, rules: PricingRules) {
+  return rules.featureMultipliers[feature] ?? 1;
 }
 
 export function detectGenerationFeature(resolved: ResolvedImageWorkflow): GenerationFeature {
@@ -330,14 +447,15 @@ export async function calculateTaskCost(
   feature = detectGenerationFeature(resolved)
 ) {
   const models = await getModelPricing();
+  const rules = await getPricingRules();
   const model = models.find((item) => item.id === resolved.model);
   const baseCredits = model?.baseCredits ?? 6;
   const count = resolved.count ?? 1;
   const rawCost =
     baseCredits *
-    getResolutionMultiplier(resolved.resolution) *
-    getDetailMultiplier(resolved.detail) *
-    getFeatureMultiplier(feature) *
+    getResolutionMultiplier(resolved.resolution, rules) *
+    getDetailMultiplier(resolved.detail, rules) *
+    getFeatureMultiplier(feature, rules) *
     count;
 
   return Math.max(1, Math.ceil(rawCost));
@@ -491,6 +609,7 @@ export async function getAdminOverview() {
   return {
     models: await getModelPricing(),
     channels: await getChannelConfigs(),
+    pricingRules: await getPricingRules(),
     sensitiveWords: await getSensitiveWords(),
     templates: await getTemplates(),
     logs: await getPlatformLogs(80),

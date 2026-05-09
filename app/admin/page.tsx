@@ -100,6 +100,7 @@ export default async function AdminPage() {
           initial={{
             models: overview.models,
             channels: overview.channels,
+            pricingRules: overview.pricingRules,
             sensitiveWords: overview.sensitiveWords,
             templates: overview.templates
           }}

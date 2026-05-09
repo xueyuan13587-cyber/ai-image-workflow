@@ -5,7 +5,8 @@ import {
   getAdminOverview,
   isAdminUser,
   saveChannelConfigs,
-  saveModelPricing
+  saveModelPricing,
+  savePricingRules
 } from "@/lib/platform";
 import { storeSet } from "@/lib/redis-store";
 
@@ -45,6 +46,7 @@ export async function POST(request: Request) {
   const body = (await request.json()) as {
     models?: Awaited<ReturnType<typeof getAdminOverview>>["models"];
     channels?: Awaited<ReturnType<typeof getAdminOverview>>["channels"];
+    pricingRules?: Awaited<ReturnType<typeof getAdminOverview>>["pricingRules"];
     sensitiveWords?: string[];
     templates?: Array<{ id: string; name: string; prompt: string }>;
   };
@@ -55,6 +57,10 @@ export async function POST(request: Request) {
 
   if (body.channels) {
     await saveChannelConfigs(body.channels);
+  }
+
+  if (body.pricingRules) {
+    await savePricingRules(body.pricingRules);
   }
 
   if (body.sensitiveWords) {
