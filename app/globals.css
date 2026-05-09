@@ -378,12 +378,12 @@ body {
   position: relative;
   z-index: 3;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) max-content;
   min-height: 74px;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 0 42px 14px 28px;
+  padding: 0 36px 14px 24px;
   color: rgba(255, 255, 255, 0.9);
 }
 
@@ -392,7 +392,7 @@ body {
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .tapnow-compose-controls {
@@ -402,6 +402,11 @@ body {
 .tapnow-compose-actions {
   flex: 0 0 auto;
   justify-content: flex-end;
+}
+
+.tapnow-compose-controls .tapnow-compose-divider,
+.tapnow-compose-controls .tapnow-compose-dot {
+  display: none;
 }
 
 .tapnow-compose-controls .tapnow-menu-wrap,
