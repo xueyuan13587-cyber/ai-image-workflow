@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { AdminRechargePanel } from "@/components/admin-recharge-panel";
 import { AdminPlatformPanel } from "@/components/admin-platform-panel";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 import { getAdminOverview, isAdminUser } from "@/lib/platform";
@@ -104,6 +105,11 @@ export default async function AdminPage() {
             sensitiveWords: overview.sensitiveWords,
             templates: overview.templates
           }}
+        />
+
+        <AdminRechargePanel
+          initialPlans={overview.rechargePlans}
+          initialOrders={overview.rechargeOrders}
         />
 
         <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">

@@ -10,6 +10,7 @@ import {
   Image as ImageIcon,
   ImagePlus,
   LogOut,
+  Plus,
   Shield,
   Sparkles,
   Trash2
@@ -58,6 +59,25 @@ type AccountState = {
     refundedCredits?: number;
     createdAt: string;
   }>;
+};
+
+type RechargePlan = {
+  id: string;
+  name: string;
+  credits: number;
+  bonusCredits?: number;
+  priceCny: number;
+  description?: string;
+};
+
+type RechargeOrder = {
+  id: string;
+  planName: string;
+  totalCredits: number;
+  priceCny: number;
+  status: "pending" | "paid" | "rejected";
+  createdAt: string;
+  paymentNote?: string;
 };
 
 function formatHistoryTime(value: string) {
@@ -161,6 +181,103 @@ function HistoryPanel({
   );
 }
 
+function RechargePanel({
+  plans,
+  orders,
+  loading,
+  message,
+  onCreateOrder,
+  onClose
+}: {
+  plans: RechargePlan[];
+  orders: RechargeOrder[];
+  loading: boolean;
+  message: string;
+  onCreateOrder: (planId: string) => void;
+  onClose: () => void;
+}) {
+  const statusLabel = {
+    pending: "待确认",
+    paid: "已到账",
+    rejected: "已拒绝"
+  };
+
+  return (
+    <aside className="absolute right-7 top-24 z-30 w-[380px] rounded-2xl border border-white/10 bg-black/75 text-white shadow-2xl backdrop-blur-xl">
+      <div className="flex items-center justify-between gap-3 border-b border-white/10 p-4">
+        <div>
+          <h2 className="text-sm font-semibold">积分充值</h2>
+          <p className="mt-1 text-xs text-white/45">提交订单后等待管理员确认到账。</p>
+        </div>
+        <button className="tapnow-pill !min-h-8 !px-3" type="button" onClick={onClose}>
+          关闭
+        </button>
+      </div>
+
+      <div className="grid gap-3 p-4">
+        {message && (
+          <div className="rounded-lg border border-cyan-300/20 bg-cyan-300/10 px-3 py-2 text-xs text-cyan-100">
+            {message}
+          </div>
+        )}
+
+        {plans.map((plan) => (
+          <div key={plan.id} className="rounded-xl border border-white/10 bg-white/[0.05] p-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="text-sm font-semibold">{plan.name}</div>
+                <div className="mt-1 text-xs text-white/45">{plan.description}</div>
+                <div className="mt-2 text-xs text-white/60">
+                  {plan.credits} 积分
+                  {plan.bonusCredits ? ` + 赠送 ${plan.bonusCredits}` : ""}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-lg font-semibold">¥{plan.priceCny}</div>
+                <button
+                  className="tapnow-run mt-2 !min-h-9 !px-4"
+                  type="button"
+                  disabled={loading}
+                  onClick={() => onCreateOrder(plan.id)}
+                >
+                  {loading ? "提交中" : "充值"}
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        <div className="mt-2 border-t border-white/10 pt-4">
+          <div className="mb-3 text-xs font-semibold text-white/60">我的充值订单</div>
+          {orders.length === 0 ? (
+            <div className="text-xs text-white/38">还没有充值订单。</div>
+          ) : (
+            <div className="grid max-h-56 gap-2 overflow-auto pr-1">
+              {orders.map((order) => (
+                <div
+                  key={order.id}
+                  className="rounded-lg border border-white/10 bg-black/20 p-3 text-xs"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-semibold text-white/85">{order.planName}</span>
+                    <span className="rounded-full bg-white/[0.08] px-2 py-1 text-white/55">
+                      {statusLabel[order.status]}
+                    </span>
+                  </div>
+                  <div className="mt-1 text-white/45">
+                    ¥{order.priceCny} · {order.totalCredits} 积分
+                  </div>
+                  <div className="mt-1 text-white/30">{formatHistoryTime(order.createdAt)}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </aside>
+  );
+}
+
 export function WorkflowCanvas({ username }: { username?: string }) {
   const {
     nodes,
@@ -178,8 +295,12 @@ export function WorkflowCanvas({ username }: { username?: string }) {
     setRunResult,
     toWorkflowJson
   } = useWorkflowStore();
-  const [panel, setPanel] = useState<"history" | null>(null);
+  const [panel, setPanel] = useState<"history" | "recharge" | null>(null);
   const [account, setAccount] = useState<AccountState | null>(null);
+  const [rechargePlans, setRechargePlans] = useState<RechargePlan[]>([]);
+  const [rechargeOrders, setRechargeOrders] = useState<RechargeOrder[]>([]);
+  const [rechargeLoading, setRechargeLoading] = useState(false);
+  const [rechargeMessage, setRechargeMessage] = useState("");
 
   useEffect(() => {
     loadHistory();
@@ -201,6 +322,57 @@ export function WorkflowCanvas({ username }: { username?: string }) {
   useEffect(() => {
     refreshAccount();
   }, []);
+
+  async function loadRecharge() {
+    const [plansResponse, ordersResponse] = await Promise.all([
+      fetch("/api/recharge/plans", { cache: "no-store" }),
+      fetch("/api/recharge/orders", { cache: "no-store" })
+    ]);
+
+    if (plansResponse.ok) {
+      const payload = (await plansResponse.json()) as { plans?: RechargePlan[] };
+      setRechargePlans(payload.plans ?? []);
+    }
+
+    if (ordersResponse.ok) {
+      const payload = (await ordersResponse.json()) as { orders?: RechargeOrder[] };
+      setRechargeOrders(payload.orders ?? []);
+    }
+  }
+
+  async function openRechargePanel() {
+    setPanel((value) => (value === "recharge" ? null : "recharge"));
+    setRechargeMessage("");
+    await loadRecharge();
+  }
+
+  async function createRechargeOrder(planId: string) {
+    setRechargeLoading(true);
+    setRechargeMessage("");
+
+    try {
+      const response = await fetch("/api/recharge/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planId })
+      });
+      const payload = (await response.json()) as {
+        error?: string;
+        order?: RechargeOrder;
+      };
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "创建充值订单失败。");
+      }
+
+      setRechargeMessage("充值订单已提交，请联系管理员确认收款后到账。");
+      await loadRecharge();
+    } catch (error) {
+      setRechargeMessage(error instanceof Error ? error.message : "创建充值订单失败。");
+    } finally {
+      setRechargeLoading(false);
+    }
+  }
 
   async function runWorkflow(event?: Event) {
     const generateNodeId =
@@ -282,6 +454,15 @@ export function WorkflowCanvas({ username }: { username?: string }) {
               {account.user.credits}
             </span>
           )}
+          <button
+            className="tapnow-pill"
+            type="button"
+            onClick={openRechargePanel}
+            title="积分充值"
+          >
+            <Plus className="h-4 w-4" />
+            充值
+          </button>
           {account?.user.isAdmin && (
             <Link className="tapnow-pill" href="/admin" title="后台管理">
               <Shield className="h-4 w-4" />
@@ -352,6 +533,17 @@ export function WorkflowCanvas({ username }: { username?: string }) {
             history={history}
             onRestore={restoreHistoryItem}
             onClear={clearHistory}
+            onClose={() => setPanel(null)}
+          />
+        )}
+
+        {panel === "recharge" && (
+          <RechargePanel
+            plans={rechargePlans}
+            orders={rechargeOrders}
+            loading={rechargeLoading}
+            message={rechargeMessage}
+            onCreateOrder={createRechargeOrder}
             onClose={() => setPanel(null)}
           />
         )}
