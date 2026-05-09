@@ -347,8 +347,7 @@ export function ImageGenerateNode({ id, data }: NodeProps<WorkflowNode>) {
         </div>
       </div>
 
-      <div className="tapnow-compose-card nodrag">
-        <div className="tapnow-compose-card-tools">
+      <div className="tapnow-compose-card-tools nodrag">
           <button
             className="tapnow-compose-icon"
             type="button"
@@ -417,6 +416,7 @@ export function ImageGenerateNode({ id, data }: NodeProps<WorkflowNode>) {
           </div>
         </div>
 
+      <div className="tapnow-compose-card nodrag">
         <textarea
           ref={textareaRef}
           value={draftPrompt}

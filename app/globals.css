@@ -315,8 +315,8 @@ body {
 .tapnow-compose-card {
   position: relative;
   z-index: 2;
-  margin: 14px;
-  min-height: 150px;
+  margin: 8px 14px 14px;
+  min-height: 132px;
   overflow: visible;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -325,13 +325,13 @@ body {
 }
 
 .tapnow-compose-card-tools {
-  position: absolute;
-  left: 14px;
-  top: 14px;
-  z-index: 3;
+  position: relative;
+  z-index: 4;
   display: flex;
   align-items: center;
   gap: 8px;
+  margin: 14px 14px 0;
+  padding-left: 2px;
 }
 
 .tapnow-compose-icon {
@@ -357,13 +357,13 @@ body {
 .tapnow-compose-textarea {
   position: relative;
   z-index: 2;
-  min-height: 150px;
+  min-height: 132px;
   width: 100%;
   resize: none;
   border: 0;
   border-radius: 14px;
   background: transparent;
-  padding: 70px 22px 20px;
+  padding: 24px 22px 20px;
   color: rgba(255, 255, 255, 0.92);
   font-size: 20px;
   line-height: 1.45;
