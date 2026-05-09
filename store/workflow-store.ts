@@ -56,7 +56,7 @@ const initialNodes: WorkflowNode[] = [
   {
     id: "reference-1",
     type: "referenceImage",
-    position: { x: -150, y: 190 },
+    position: { x: -760, y: 120 },
     data: {
       label: "参考图",
       refName: "product"
@@ -65,7 +65,7 @@ const initialNodes: WorkflowNode[] = [
   {
     id: "generate-1",
     type: "imageGenerate",
-    position: { x: 230, y: 160 },
+    position: { x: -80, y: 90 },
     data: {
       label: "图片生成",
       model: "gpt-image-1.5",
@@ -80,7 +80,7 @@ const initialNodes: WorkflowNode[] = [
   {
     id: "preview-1",
     type: "imagePreview",
-    position: { x: 650, y: 190 },
+    position: { x: 860, y: 130 },
     style: { width: 360, height: 320 },
     data: {
       label: "图片预览",
