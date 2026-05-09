@@ -82,7 +82,7 @@ function HistoryPanel({
   onClose: () => void;
 }) {
   return (
-    <aside className="absolute right-6 top-24 z-30 max-h-[calc(100vh-8rem)] w-[340px] overflow-auto rounded-2xl border border-white/10 bg-black/70 text-white shadow-2xl backdrop-blur-xl">
+    <aside className="absolute left-24 top-24 z-30 max-h-[calc(100vh-8rem)] w-[340px] overflow-auto rounded-2xl border border-white/10 bg-black/70 text-white shadow-2xl backdrop-blur-xl">
       <div className="flex items-center justify-between gap-3 border-b border-white/10 p-4">
         <div>
           <h2 className="text-sm font-semibold">图片历史</h2>

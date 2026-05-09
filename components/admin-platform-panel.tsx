@@ -25,6 +25,7 @@ type ModelConfig = {
   channel: string;
   baseCredits: number;
   multiplier: number;
+  referenceImageMultiplier?: number;
   resolutionMultipliers?: PricingRules["resolutionMultipliers"];
   detailMultipliers?: PricingRules["detailMultipliers"];
 };
@@ -204,6 +205,9 @@ export function AdminPlatformPanel({ initial }: { initial: AdminOverview }) {
             ...model,
             baseCredits: Math.max(1, Math.round(Number(model.baseCredits) || 1)),
             multiplier: toSafeMultiplier(String(model.multiplier)),
+            referenceImageMultiplier: toSafeMultiplier(
+              String(model.referenceImageMultiplier ?? 1.25)
+            ),
             resolutionMultipliers: {
               "1K": toSafeMultiplier(String(model.resolutionMultipliers?.["1K"] ?? 1)),
               "2K": toSafeMultiplier(String(model.resolutionMultipliers?.["2K"] ?? 2)),
@@ -305,6 +309,13 @@ export function AdminPlatformPanel({ initial }: { initial: AdminOverview }) {
                     label="Model Multiplier"
                     value={model.multiplier}
                     onChange={(value) => updateModel(index, { multiplier: value })}
+                  />
+                  <NumberField
+                    label="Reference Multiplier"
+                    value={model.referenceImageMultiplier ?? 1.25}
+                    onChange={(value) =>
+                      updateModel(index, { referenceImageMultiplier: value })
+                    }
                   />
                 </div>
 

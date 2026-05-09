@@ -30,6 +30,7 @@ export type ModelPricing = {
   multiplier: number;
   resolutionMultipliers?: PricingRules["resolutionMultipliers"];
   detailMultipliers?: PricingRules["detailMultipliers"];
+  referenceImageMultiplier?: number;
 };
 
 export type ChannelConfig = {
@@ -102,6 +103,7 @@ const defaultModels: ModelPricing[] = [
     channel: "gptsapi-v1",
     baseCredits: 4,
     multiplier: 1,
+    referenceImageMultiplier: 1.25,
     resolutionMultipliers: { "1K": 1, "2K": 2, "4K": 4 },
     detailMultipliers: { low: 1, medium: 1.4, high: 2 }
   },
@@ -112,6 +114,7 @@ const defaultModels: ModelPricing[] = [
     channel: "gptsapi-v3-openai",
     baseCredits: 10,
     multiplier: 1,
+    referenceImageMultiplier: 1.25,
     resolutionMultipliers: { "1K": 1, "2K": 2, "4K": 4 },
     detailMultipliers: { low: 1, medium: 1.4, high: 2 }
   },
@@ -122,6 +125,7 @@ const defaultModels: ModelPricing[] = [
     channel: "gptsapi-v3-google",
     baseCredits: 6,
     multiplier: 1,
+    referenceImageMultiplier: 1.25,
     resolutionMultipliers: { "1K": 1, "2K": 2, "4K": 4 },
     detailMultipliers: { low: 1, medium: 1.4, high: 2 }
   },
@@ -132,6 +136,7 @@ const defaultModels: ModelPricing[] = [
     channel: "gptsapi-v3-google",
     baseCredits: 12,
     multiplier: 1,
+    referenceImageMultiplier: 1.25,
     resolutionMultipliers: { "1K": 1, "2K": 2, "4K": 4 },
     detailMultipliers: { low: 1, medium: 1.4, high: 2 }
   }
@@ -209,6 +214,7 @@ function normalizeModels(models: unknown): ModelPricing[] {
     );
     const baseCredits = Number(stored?.baseCredits);
     const multiplier = Number(stored?.multiplier);
+    const referenceImageMultiplier = Number(stored?.referenceImageMultiplier);
     const resolutionMultipliers = normalizePricingRules({
       resolutionMultipliers: stored?.resolutionMultipliers
     }).resolutionMultipliers;
@@ -222,6 +228,10 @@ function normalizeModels(models: unknown): ModelPricing[] {
       enabled: typeof stored?.enabled === "boolean" ? stored.enabled : fallback.enabled,
       baseCredits: Number.isFinite(baseCredits) ? Math.max(1, Math.round(baseCredits)) : fallback.baseCredits,
       multiplier: Number.isFinite(multiplier) && multiplier > 0 ? Math.round(multiplier * 100) / 100 : fallback.multiplier,
+      referenceImageMultiplier:
+        Number.isFinite(referenceImageMultiplier) && referenceImageMultiplier > 0
+          ? Math.round(referenceImageMultiplier * 100) / 100
+          : fallback.referenceImageMultiplier,
       resolutionMultipliers,
       detailMultipliers
     };
@@ -449,6 +459,21 @@ function getFeatureMultiplier(feature: GenerationFeature, rules: PricingRules) {
   return rules.featureMultipliers[feature] ?? 1;
 }
 
+function getModelReferenceMultiplier(
+  feature: GenerationFeature,
+  model?: ModelPricing
+) {
+  if (feature === "reference-image" || feature === "image-to-image") {
+    return model?.referenceImageMultiplier ?? 1.25;
+  }
+
+  if (feature === "multi-image-fusion") {
+    return model?.referenceImageMultiplier ?? 1.25;
+  }
+
+  return 1;
+}
+
 export function detectGenerationFeature(resolved: ResolvedImageWorkflow): GenerationFeature {
   const referenceCount = resolved.referenceImages.length;
 
@@ -487,6 +512,7 @@ export async function calculateTaskCost(
     modelMultiplier *
     getResolutionMultiplier(resolved.resolution, modelRules) *
     getDetailMultiplier(resolved.detail, modelRules) *
+    getModelReferenceMultiplier(feature, model) *
     getFeatureMultiplier(feature, rules) *
     count;
 
