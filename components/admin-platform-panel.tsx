@@ -2,31 +2,35 @@
 
 import { useState } from "react";
 
+type FeatureKey =
+  | "text-to-image"
+  | "image-to-image"
+  | "reference-image"
+  | "inpaint"
+  | "outpaint"
+  | "upscale"
+  | "multi-image-fusion"
+  | "batch";
+
 type PricingRules = {
   resolutionMultipliers: Record<"1K" | "2K" | "4K", number>;
   detailMultipliers: Record<"low" | "medium" | "high", number>;
-  featureMultipliers: Record<
-    | "text-to-image"
-    | "image-to-image"
-    | "reference-image"
-    | "inpaint"
-    | "outpaint"
-    | "upscale"
-    | "multi-image-fusion"
-    | "batch",
-    number
-  >;
+  featureMultipliers: Record<FeatureKey, number>;
+};
+
+type ModelConfig = {
+  id: string;
+  name: string;
+  enabled: boolean;
+  channel: string;
+  baseCredits: number;
+  multiplier: number;
+  resolutionMultipliers?: PricingRules["resolutionMultipliers"];
+  detailMultipliers?: PricingRules["detailMultipliers"];
 };
 
 type AdminOverview = {
-  models: Array<{
-    id: string;
-    name: string;
-    enabled: boolean;
-    channel: string;
-    baseCredits: number;
-    multiplier: number;
-  }>;
+  models: ModelConfig[];
   channels: Array<{
     id: string;
     name: string;
@@ -43,33 +47,54 @@ type AdminOverview = {
   }>;
 };
 
+const resolutionKeys = ["1K", "2K", "4K"] as const;
+const detailOptions = [
+  ["low", "Low"],
+  ["medium", "Medium"],
+  ["high", "High"]
+] as const;
+const featureOptions: Array<[FeatureKey, string]> = [
+  ["text-to-image", "Text"],
+  ["reference-image", "Reference"],
+  ["image-to-image", "Image Edit"],
+  ["multi-image-fusion", "Fusion"],
+  ["inpaint", "Inpaint"],
+  ["outpaint", "Outpaint"],
+  ["upscale", "Upscale"],
+  ["batch", "Batch"]
+];
+
 function toSafeCredits(value: string) {
   const parsed = Number(value);
-
-  if (!Number.isFinite(parsed)) {
-    return 1;
-  }
-
-  return Math.max(1, Math.round(parsed));
+  return Number.isFinite(parsed) ? Math.max(1, Math.round(parsed)) : 1;
 }
 
 function toSafeMultiplier(value: string) {
   const parsed = Number(value);
-
-  if (!Number.isFinite(parsed) || parsed <= 0) {
-    return 1;
-  }
-
-  return Math.round(parsed * 100) / 100;
+  return Number.isFinite(parsed) && parsed > 0 ? Math.round(parsed * 100) / 100 : 1;
 }
 
-function MultiplierInput({
+function getResolutionMultiplier(model: ModelConfig, key: "1K" | "2K" | "4K") {
+  const fallback = key === "1K" ? 1 : key === "2K" ? 2 : 4;
+  return model.resolutionMultipliers?.[key] ?? fallback;
+}
+
+function getDetailMultiplier(model: ModelConfig, key: "low" | "medium" | "high") {
+  const fallback = key === "low" ? 1 : key === "medium" ? 1.4 : 2;
+  return model.detailMultipliers?.[key] ?? fallback;
+}
+
+function NumberField({
   label,
   value,
+  min = 0.1,
+  step = 0.1,
   onChange
 }: {
   label: string;
   value: number;
+  min?: number;
+  step?: number;
   onChange: (value: number) => void;
 }) {
   return (
@@ -78,8 +103,8 @@ function MultiplierInput({
       <input
         className="h-9 rounded-lg border border-white/10 bg-black/25 px-3 text-sm text-white outline-none"
         type="number"
-        min={0.1}
-        step={0.1}
+        min={min}
+        step={step}
         value={value}
         onChange={(event) => onChange(toSafeMultiplier(event.currentTarget.value))}
       />
@@ -98,27 +123,57 @@ export function AdminPlatformPanel({ initial }: { initial: AdminOverview }) {
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
 
-  function updateResolution(key: keyof PricingRules["resolutionMultipliers"], value: number) {
-    setPricingRules((rules) => ({
-      ...rules,
-      resolutionMultipliers: {
-        ...rules.resolutionMultipliers,
-        [key]: value
-      }
-    }));
+  function updateModel(index: number, next: Partial<ModelConfig>) {
+    setModels((items) =>
+      items.map((item, itemIndex) => (itemIndex === index ? { ...item, ...next } : item))
+    );
   }
 
-  function updateDetail(key: keyof PricingRules["detailMultipliers"], value: number) {
-    setPricingRules((rules) => ({
-      ...rules,
-      detailMultipliers: {
-        ...rules.detailMultipliers,
-        [key]: value
-      }
-    }));
+  function updateModelResolution(
+    index: number,
+    key: "1K" | "2K" | "4K",
+    value: number
+  ) {
+    setModels((items) =>
+      items.map((item, itemIndex) =>
+        itemIndex === index
+          ? {
+              ...item,
+              resolutionMultipliers: {
+                "1K": getResolutionMultiplier(item, "1K"),
+                "2K": getResolutionMultiplier(item, "2K"),
+                "4K": getResolutionMultiplier(item, "4K"),
+                [key]: value
+              }
+            }
+          : item
+      )
+    );
   }
 
-  function updateFeature(key: keyof PricingRules["featureMultipliers"], value: number) {
+  function updateModelDetail(
+    index: number,
+    key: "low" | "medium" | "high",
+    value: number
+  ) {
+    setModels((items) =>
+      items.map((item, itemIndex) =>
+        itemIndex === index
+          ? {
+              ...item,
+              detailMultipliers: {
+                low: getDetailMultiplier(item, "low"),
+                medium: getDetailMultiplier(item, "medium"),
+                high: getDetailMultiplier(item, "high"),
+                [key]: value
+              }
+            }
+          : item
+      )
+    );
+  }
+
+  function updateFeature(key: FeatureKey, value: number) {
     setPricingRules((rules) => ({
       ...rules,
       featureMultipliers: {
@@ -138,7 +193,7 @@ export function AdminPlatformPanel({ initial }: { initial: AdminOverview }) {
       try {
         templates = JSON.parse(templatesJson) as AdminOverview["templates"];
       } catch {
-        throw new Error("模板 JSON 格式不正确，请检查逗号、引号和括号。");
+        throw new Error("Template JSON is invalid.");
       }
 
       const response = await fetch("/api/admin/config", {
@@ -148,7 +203,17 @@ export function AdminPlatformPanel({ initial }: { initial: AdminOverview }) {
           models: models.map((model) => ({
             ...model,
             baseCredits: Math.max(1, Math.round(Number(model.baseCredits) || 1)),
-            multiplier: toSafeMultiplier(String(model.multiplier))
+            multiplier: toSafeMultiplier(String(model.multiplier)),
+            resolutionMultipliers: {
+              "1K": toSafeMultiplier(String(model.resolutionMultipliers?.["1K"] ?? 1)),
+              "2K": toSafeMultiplier(String(model.resolutionMultipliers?.["2K"] ?? 2)),
+              "4K": toSafeMultiplier(String(model.resolutionMultipliers?.["4K"] ?? 4))
+            },
+            detailMultipliers: {
+              low: toSafeMultiplier(String(model.detailMultipliers?.low ?? 1)),
+              medium: toSafeMultiplier(String(model.detailMultipliers?.medium ?? 1.4)),
+              high: toSafeMultiplier(String(model.detailMultipliers?.high ?? 2))
+            }
           })),
           channels,
           pricingRules,
@@ -164,7 +229,7 @@ export function AdminPlatformPanel({ initial }: { initial: AdminOverview }) {
       };
 
       if (!response.ok) {
-        throw new Error(payload.error ?? "保存失败");
+        throw new Error(payload.error ?? "Save failed.");
       }
 
       if (payload.models) setModels(payload.models);
@@ -173,9 +238,9 @@ export function AdminPlatformPanel({ initial }: { initial: AdminOverview }) {
       if (payload.sensitiveWords) setSensitiveWords(payload.sensitiveWords.join("\n"));
       if (payload.templates) setTemplatesJson(JSON.stringify(payload.templates, null, 2));
 
-      setMessage("配置已保存");
+      setMessage("Saved.");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "保存失败");
+      setMessage(error instanceof Error ? error.message : "Save failed.");
     } finally {
       setSaving(false);
     }
@@ -185,27 +250,22 @@ export function AdminPlatformPanel({ initial }: { initial: AdminOverview }) {
     <section className="rounded-xl border border-white/10 bg-white/[0.05] p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold">平台配置</h2>
+          <h2 className="text-lg font-semibold">Pricing Config</h2>
           <p className="mt-1 text-sm text-white/42">
-            模型基础积分乘以分辨率、质量、功能和张数，得到最终扣费。
+            Each model has its own resolution and quality multipliers.
           </p>
         </div>
-        <button
-          className="tapnow-run"
-          type="button"
-          onClick={saveConfig}
-          disabled={saving}
-        >
-          {saving ? "保存中" : "保存配置"}
+        <button className="tapnow-run" type="button" onClick={saveConfig} disabled={saving}>
+          {saving ? "Saving" : "Save"}
         </button>
       </div>
 
       {message && <div className="mt-3 text-sm text-cyan-200">{message}</div>}
 
-      <div className="mt-5 grid gap-6 xl:grid-cols-3">
+      <div className="mt-5 grid gap-6 xl:grid-cols-[1.4fr_0.8fr]">
         <div>
-          <h3 className="mb-3 text-sm font-semibold text-white/75">模型基础积分</h3>
-          <div className="grid gap-2">
+          <h3 className="mb-3 text-sm font-semibold text-white/75">Per Model Pricing</h3>
+          <div className="grid gap-3">
             {models.map((model, index) => (
               <div key={model.id} className="rounded-lg border border-white/10 p-3">
                 <div className="flex items-center justify-between gap-3">
@@ -218,149 +278,84 @@ export function AdminPlatformPanel({ initial }: { initial: AdminOverview }) {
                       type="checkbox"
                       checked={model.enabled}
                       onChange={(event) =>
-                        setModels((items) =>
-                          items.map((item, itemIndex) =>
-                            itemIndex === index
-                              ? { ...item, enabled: event.currentTarget.checked }
-                              : item
-                          )
-                        )
+                        updateModel(index, { enabled: event.currentTarget.checked })
                       }
                     />
-                    启用
+                    Enabled
                   </label>
                 </div>
-                <label className="mt-3 grid gap-1 text-xs text-white/45">
-                  基础积分
-                  <input
-                    className="h-9 rounded-lg border border-white/10 bg-black/25 px-3 text-sm text-white outline-none"
-                    type="number"
-                    min={1}
-                    step={1}
-                    value={model.baseCredits}
-                    onChange={(event) => {
-                      const nextCredits = toSafeCredits(event.currentTarget.value);
 
-                      setModels((items) =>
-                        items.map((item, itemIndex) =>
-                          itemIndex === index
-                            ? { ...item, baseCredits: nextCredits }
-                            : item
-                        )
-                      );
-                    }}
-                  />
-                </label>
-                <label className="mt-3 grid gap-1 text-xs text-white/45">
-                  模型倍率
-                  <input
-                    className="h-9 rounded-lg border border-white/10 bg-black/25 px-3 text-sm text-white outline-none"
-                    type="number"
-                    min={0.1}
-                    step={0.1}
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <label className="grid gap-1 text-xs text-white/45">
+                    Base Credits
+                    <input
+                      className="h-9 rounded-lg border border-white/10 bg-black/25 px-3 text-sm text-white outline-none"
+                      type="number"
+                      min={1}
+                      step={1}
+                      value={model.baseCredits}
+                      onChange={(event) =>
+                        updateModel(index, {
+                          baseCredits: toSafeCredits(event.currentTarget.value)
+                        })
+                      }
+                    />
+                  </label>
+                  <NumberField
+                    label="Model Multiplier"
                     value={model.multiplier}
-                    onChange={(event) => {
-                      const multiplier = toSafeMultiplier(event.currentTarget.value);
-
-                      setModels((items) =>
-                        items.map((item, itemIndex) =>
-                          itemIndex === index ? { ...item, multiplier } : item
-                        )
-                      );
-                    }}
+                    onChange={(value) => updateModel(index, { multiplier: value })}
                   />
-                </label>
+                </div>
+
+                <div className="mt-4 rounded-lg border border-white/10 bg-black/15 p-3">
+                  <div className="mb-3 text-xs font-semibold text-white/60">
+                    Resolution multipliers for this model
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    {resolutionKeys.map((resolution) => (
+                      <NumberField
+                        key={resolution}
+                        label={resolution}
+                        value={getResolutionMultiplier(model, resolution)}
+                        onChange={(value) => updateModelResolution(index, resolution, value)}
+                      />
+                    ))}
+                  </div>
+
+                  <div className="mb-3 mt-4 text-xs font-semibold text-white/60">
+                    Quality multipliers for this model
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    {detailOptions.map(([detail, label]) => (
+                      <NumberField
+                        key={detail}
+                        label={label}
+                        value={getDetailMultiplier(model, detail)}
+                        onChange={(value) => updateModelDetail(index, detail, value)}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
             ))}
           </div>
         </div>
 
         <div>
-          <h3 className="mb-3 text-sm font-semibold text-white/75">参数倍率</h3>
-          <div className="grid gap-3 rounded-lg border border-white/10 p-3">
-            <div className="grid gap-3 sm:grid-cols-3">
-              <MultiplierInput
-                label="1K"
-                value={pricingRules.resolutionMultipliers["1K"]}
-                onChange={(value) => updateResolution("1K", value)}
-              />
-              <MultiplierInput
-                label="2K"
-                value={pricingRules.resolutionMultipliers["2K"]}
-                onChange={(value) => updateResolution("2K", value)}
-              />
-              <MultiplierInput
-                label="4K"
-                value={pricingRules.resolutionMultipliers["4K"]}
-                onChange={(value) => updateResolution("4K", value)}
-              />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <MultiplierInput
-                label="低质量"
-                value={pricingRules.detailMultipliers.low}
-                onChange={(value) => updateDetail("low", value)}
-              />
-              <MultiplierInput
-                label="中质量"
-                value={pricingRules.detailMultipliers.medium}
-                onChange={(value) => updateDetail("medium", value)}
-              />
-              <MultiplierInput
-                label="高质量"
-                value={pricingRules.detailMultipliers.high}
-                onChange={(value) => updateDetail("high", value)}
-              />
-            </div>
-          </div>
-
-          <h3 className="mb-3 mt-5 text-sm font-semibold text-white/75">功能倍率</h3>
+          <h3 className="mb-3 text-sm font-semibold text-white/75">Feature Multipliers</h3>
           <div className="grid gap-3 rounded-lg border border-white/10 p-3 sm:grid-cols-2">
-            <MultiplierInput
-              label="文生图"
-              value={pricingRules.featureMultipliers["text-to-image"]}
-              onChange={(value) => updateFeature("text-to-image", value)}
-            />
-            <MultiplierInput
-              label="添加参考图"
-              value={pricingRules.featureMultipliers["reference-image"]}
-              onChange={(value) => updateFeature("reference-image", value)}
-            />
-            <MultiplierInput
-              label="图生图"
-              value={pricingRules.featureMultipliers["image-to-image"]}
-              onChange={(value) => updateFeature("image-to-image", value)}
-            />
-            <MultiplierInput
-              label="多图融合"
-              value={pricingRules.featureMultipliers["multi-image-fusion"]}
-              onChange={(value) => updateFeature("multi-image-fusion", value)}
-            />
-            <MultiplierInput
-              label="局部重绘"
-              value={pricingRules.featureMultipliers.inpaint}
-              onChange={(value) => updateFeature("inpaint", value)}
-            />
-            <MultiplierInput
-              label="扩图"
-              value={pricingRules.featureMultipliers.outpaint}
-              onChange={(value) => updateFeature("outpaint", value)}
-            />
-            <MultiplierInput
-              label="高清放大"
-              value={pricingRules.featureMultipliers.upscale}
-              onChange={(value) => updateFeature("upscale", value)}
-            />
-            <MultiplierInput
-              label="批量生成"
-              value={pricingRules.featureMultipliers.batch}
-              onChange={(value) => updateFeature("batch", value)}
-            />
+            {featureOptions.map(([key, label]) => (
+              <NumberField
+                key={key}
+                label={label}
+                value={pricingRules.featureMultipliers[key]}
+                onChange={(value) => updateFeature(key, value)}
+              />
+            ))}
           </div>
-        </div>
 
-        <div>
-          <h3 className="mb-3 text-sm font-semibold text-white/75">渠道开关</h3>
+          <h3 className="mb-3 mt-5 text-sm font-semibold text-white/75">Channels</h3>
           <div className="grid gap-2">
             {channels.map((channel, index) => (
               <div key={channel.id} className="rounded-lg border border-white/10 p-3">
@@ -387,15 +382,15 @@ export function AdminPlatformPanel({ initial }: { initial: AdminOverview }) {
             ))}
           </div>
 
-          <h3 className="mb-3 mt-5 text-sm font-semibold text-white/75">敏感词</h3>
+          <h3 className="mb-3 mt-5 text-sm font-semibold text-white/75">Sensitive Words</h3>
           <textarea
             className="min-h-28 w-full rounded-lg border border-white/10 bg-black/25 p-3 text-sm text-white outline-none"
             value={sensitiveWords}
             onChange={(event) => setSensitiveWords(event.currentTarget.value)}
-            placeholder="一行一个敏感词"
+            placeholder="One word per line"
           />
 
-          <h3 className="mb-3 mt-5 text-sm font-semibold text-white/75">模板 JSON</h3>
+          <h3 className="mb-3 mt-5 text-sm font-semibold text-white/75">Template JSON</h3>
           <textarea
             className="min-h-36 w-full rounded-lg border border-white/10 bg-black/25 p-3 font-mono text-xs text-white outline-none"
             value={templatesJson}

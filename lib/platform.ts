@@ -28,6 +28,8 @@ export type ModelPricing = {
   channel: string;
   baseCredits: number;
   multiplier: number;
+  resolutionMultipliers?: PricingRules["resolutionMultipliers"];
+  detailMultipliers?: PricingRules["detailMultipliers"];
 };
 
 export type ChannelConfig = {
@@ -99,7 +101,9 @@ const defaultModels: ModelPricing[] = [
     enabled: true,
     channel: "gptsapi-v1",
     baseCredits: 4,
-    multiplier: 1
+    multiplier: 1,
+    resolutionMultipliers: { "1K": 1, "2K": 2, "4K": 4 },
+    detailMultipliers: { low: 1, medium: 1.4, high: 2 }
   },
   {
     id: "gpt-image-2-plus",
@@ -107,7 +111,9 @@ const defaultModels: ModelPricing[] = [
     enabled: true,
     channel: "gptsapi-v3-openai",
     baseCredits: 10,
-    multiplier: 1
+    multiplier: 1,
+    resolutionMultipliers: { "1K": 1, "2K": 2, "4K": 4 },
+    detailMultipliers: { low: 1, medium: 1.4, high: 2 }
   },
   {
     id: "gemini-3.1-flash-image-preview",
@@ -115,7 +121,9 @@ const defaultModels: ModelPricing[] = [
     enabled: true,
     channel: "gptsapi-v3-google",
     baseCredits: 6,
-    multiplier: 1
+    multiplier: 1,
+    resolutionMultipliers: { "1K": 1, "2K": 2, "4K": 4 },
+    detailMultipliers: { low: 1, medium: 1.4, high: 2 }
   },
   {
     id: "gemini-3-pro-image-preview",
@@ -123,7 +131,9 @@ const defaultModels: ModelPricing[] = [
     enabled: true,
     channel: "gptsapi-v3-google",
     baseCredits: 12,
-    multiplier: 1
+    multiplier: 1,
+    resolutionMultipliers: { "1K": 1, "2K": 2, "4K": 4 },
+    detailMultipliers: { low: 1, medium: 1.4, high: 2 }
   }
 ];
 
@@ -199,13 +209,21 @@ function normalizeModels(models: unknown): ModelPricing[] {
     );
     const baseCredits = Number(stored?.baseCredits);
     const multiplier = Number(stored?.multiplier);
+    const resolutionMultipliers = normalizePricingRules({
+      resolutionMultipliers: stored?.resolutionMultipliers
+    }).resolutionMultipliers;
+    const detailMultipliers = normalizePricingRules({
+      detailMultipliers: stored?.detailMultipliers
+    }).detailMultipliers;
 
     return {
       ...fallback,
       ...stored,
       enabled: typeof stored?.enabled === "boolean" ? stored.enabled : fallback.enabled,
       baseCredits: Number.isFinite(baseCredits) ? Math.max(1, Math.round(baseCredits)) : fallback.baseCredits,
-      multiplier: Number.isFinite(multiplier) && multiplier > 0 ? Math.round(multiplier * 100) / 100 : fallback.multiplier
+      multiplier: Number.isFinite(multiplier) && multiplier > 0 ? Math.round(multiplier * 100) / 100 : fallback.multiplier,
+      resolutionMultipliers,
+      detailMultipliers
     };
   });
 }
@@ -458,12 +476,17 @@ export async function calculateTaskCost(
   const model = models.find((item) => item.id === resolved.model);
   const baseCredits = model?.baseCredits ?? 6;
   const modelMultiplier = model?.multiplier ?? 1;
+  const modelRules: PricingRules = {
+    ...rules,
+    resolutionMultipliers: model?.resolutionMultipliers ?? rules.resolutionMultipliers,
+    detailMultipliers: model?.detailMultipliers ?? rules.detailMultipliers
+  };
   const count = resolved.count ?? 1;
   const rawCost =
     baseCredits *
     modelMultiplier *
-    getResolutionMultiplier(resolved.resolution, rules) *
-    getDetailMultiplier(resolved.detail, rules) *
+    getResolutionMultiplier(resolved.resolution, modelRules) *
+    getDetailMultiplier(resolved.detail, modelRules) *
     getFeatureMultiplier(feature, rules) *
     count;
 
