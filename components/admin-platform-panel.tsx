@@ -25,6 +25,16 @@ type AdminOverview = {
   }>;
 };
 
+function toSafeCredits(value: string) {
+  const parsed = Number(value);
+
+  if (!Number.isFinite(parsed)) {
+    return 1;
+  }
+
+  return Math.max(1, Math.round(parsed));
+}
+
 export function AdminPlatformPanel({ initial }: { initial: AdminOverview }) {
   const [models, setModels] = useState(initial.models);
   const [channels, setChannels] = useState(initial.channels);
@@ -40,12 +50,22 @@ export function AdminPlatformPanel({ initial }: { initial: AdminOverview }) {
     setMessage("");
 
     try {
-      const templates = JSON.parse(templatesJson) as AdminOverview["templates"];
+      let templates: AdminOverview["templates"];
+
+      try {
+        templates = JSON.parse(templatesJson) as AdminOverview["templates"];
+      } catch {
+        throw new Error("模板 JSON 格式不正确，请检查逗号、引号和括号。");
+      }
+
       const response = await fetch("/api/admin/config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          models,
+          models: models.map((model) => ({
+            ...model,
+            baseCredits: Math.max(1, Math.round(Number(model.baseCredits) || 1))
+          })),
           channels,
           sensitiveWords: sensitiveWords
             .split("\n")
@@ -54,13 +74,31 @@ export function AdminPlatformPanel({ initial }: { initial: AdminOverview }) {
           templates
         })
       });
-      const payload = (await response.json()) as { error?: string };
+      const payload = (await response.json()) as Partial<AdminOverview> & {
+        error?: string;
+      };
 
       if (!response.ok) {
         throw new Error(payload.error ?? "保存失败");
       }
 
-      setMessage("已保存配置");
+      if (payload.models) {
+        setModels(payload.models);
+      }
+
+      if (payload.channels) {
+        setChannels(payload.channels);
+      }
+
+      if (payload.sensitiveWords) {
+        setSensitiveWords(payload.sensitiveWords.join("\n"));
+      }
+
+      if (payload.templates) {
+        setTemplatesJson(JSON.stringify(payload.templates, null, 2));
+      }
+
+      setMessage("配置已保存");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "保存失败");
     } finally {
@@ -74,7 +112,7 @@ export function AdminPlatformPanel({ initial }: { initial: AdminOverview }) {
         <div>
           <h2 className="text-lg font-semibold">平台配置</h2>
           <p className="mt-1 text-sm text-white/42">
-            调整模型积分、渠道开关、敏感词和创作模板。
+            管理模型积分、渠道开关、敏感词和创作模板。
           </p>
         </div>
         <button
@@ -123,16 +161,19 @@ export function AdminPlatformPanel({ initial }: { initial: AdminOverview }) {
                     className="h-9 rounded-lg border border-white/10 bg-black/25 px-3 text-sm text-white outline-none"
                     type="number"
                     min={1}
+                    step={1}
                     value={model.baseCredits}
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      const nextCredits = toSafeCredits(event.currentTarget.value);
+
                       setModels((items) =>
                         items.map((item, itemIndex) =>
                           itemIndex === index
-                            ? { ...item, baseCredits: Number(event.currentTarget.value) }
+                            ? { ...item, baseCredits: nextCredits }
                             : item
                         )
-                      )
-                    }
+                      );
+                    }}
                   />
                 </label>
               </div>

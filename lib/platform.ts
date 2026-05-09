@@ -140,6 +140,52 @@ const defaultChannels: ChannelConfig[] = [
   }
 ];
 
+function normalizeModels(models: unknown): ModelPricing[] {
+  if (!Array.isArray(models)) {
+    return defaultModels;
+  }
+
+  return defaultModels.map((fallback) => {
+    const stored = models.find(
+      (item): item is Partial<ModelPricing> =>
+        typeof item === "object" &&
+        item !== null &&
+        "id" in item &&
+        item.id === fallback.id
+    );
+    const baseCredits = Number(stored?.baseCredits);
+
+    return {
+      ...fallback,
+      ...stored,
+      enabled: typeof stored?.enabled === "boolean" ? stored.enabled : fallback.enabled,
+      baseCredits: Number.isFinite(baseCredits) ? Math.max(1, Math.round(baseCredits)) : fallback.baseCredits
+    };
+  });
+}
+
+function normalizeChannels(channels: unknown): ChannelConfig[] {
+  if (!Array.isArray(channels)) {
+    return defaultChannels;
+  }
+
+  return defaultChannels.map((fallback) => {
+    const stored = channels.find(
+      (item): item is Partial<ChannelConfig> =>
+        typeof item === "object" &&
+        item !== null &&
+        "id" in item &&
+        item.id === fallback.id
+    );
+
+    return {
+      ...fallback,
+      ...stored,
+      enabled: typeof stored?.enabled === "boolean" ? stored.enabled : fallback.enabled
+    };
+  });
+}
+
 function now() {
   return new Date().toISOString();
 }
@@ -165,11 +211,11 @@ function adminListKey(name: string) {
 }
 
 export async function getModelPricing() {
-  return (await storeGet<ModelPricing[]>(adminListKey("models"))) ?? defaultModels;
+  return normalizeModels(await storeGet<ModelPricing[]>(adminListKey("models")));
 }
 
 export async function getChannelConfigs() {
-  return (await storeGet<ChannelConfig[]>(adminListKey("channels"))) ?? defaultChannels;
+  return normalizeChannels(await storeGet<ChannelConfig[]>(adminListKey("channels")));
 }
 
 export async function getSensitiveWords() {
@@ -185,11 +231,11 @@ export async function getTemplates() {
 }
 
 export async function saveModelPricing(models: ModelPricing[]) {
-  await storeSet(adminListKey("models"), models);
+  await storeSet(adminListKey("models"), normalizeModels(models));
 }
 
 export async function saveChannelConfigs(channels: ChannelConfig[]) {
-  await storeSet(adminListKey("channels"), channels);
+  await storeSet(adminListKey("channels"), normalizeChannels(channels));
 }
 
 export async function getUserCredits(userId: string) {
