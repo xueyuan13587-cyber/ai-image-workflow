@@ -5,7 +5,7 @@ import {
   getSessionCookieOptions,
   SESSION_COOKIE
 } from "@/lib/auth";
-import { validateUserLogin } from "@/lib/users";
+import { createUser } from "@/lib/users";
 
 export const runtime = "nodejs";
 
@@ -17,23 +17,20 @@ export async function POST(request: Request) {
     };
     const username = body.username?.trim() ?? "";
     const password = body.password ?? "";
-
-    if (!username || !password || !(await validateUserLogin(username, password))) {
-      return NextResponse.json({ error: "账号或密码不正确。" }, { status: 401 });
-    }
-
+    const user = await createUser(username, password);
     const response = NextResponse.json({ ok: true });
+
     response.cookies.set(
       SESSION_COOKIE,
-      createSessionToken(username),
+      createSessionToken(user.username),
       getSessionCookieOptions()
     );
 
     return response;
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "登录失败。" },
-      { status: 500 }
+      { error: error instanceof Error ? error.message : "注册失败。" },
+      { status: 400 }
     );
   }
 }

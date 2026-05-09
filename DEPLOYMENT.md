@@ -44,6 +44,9 @@ OPENAI_IMAGE_SIZE=1024x1024
 OPENAI_IMAGE_QUALITY=auto
 AUTH_SECRET=replace-with-a-long-random-secret
 AUTH_USERS=admin:change-this-password
+ENABLE_SIGNUP=true
+UPSTASH_REDIS_REST_URL=your-upstash-rest-url
+UPSTASH_REDIS_REST_TOKEN=your-upstash-rest-token
 CLOUDINARY_CLOUD_NAME=your-cloud-name
 CLOUDINARY_UPLOAD_PRESET=your-unsigned-upload-preset
 ```
@@ -65,6 +68,11 @@ AUTH_USERS=alice:strong-password,bob:another-strong-password
 
 `AUTH_SECRET` should be a long random string. Do not reuse the example value.
 
+`AUTH_USERS` is for fixed admin accounts. To allow normal users to register on
+the website, create a free Upstash Redis database and add its REST URL and REST
+token as `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`. Keep
+`ENABLE_SIGNUP=true`.
+
 ## Step 4: Deploy
 
 Click `Deploy`.
@@ -75,8 +83,8 @@ After deployment, Vercel gives you a public URL like:
 https://your-project-name.vercel.app
 ```
 
-Anyone with this URL can open the login page. Only users listed in `AUTH_USERS`
-can enter the canvas and call the image generation API.
+Anyone with this URL can open the login page. Users listed in `AUTH_USERS` can
+log in directly, and new users can register when Upstash Redis is configured.
 
 ## Step 5: Add a Custom Domain
 

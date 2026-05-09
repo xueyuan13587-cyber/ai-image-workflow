@@ -40,6 +40,9 @@ OPENAI_IMAGE_SIZE=1024x1024 # optional fallback
 OPENAI_IMAGE_QUALITY=auto # optional fallback
 AUTH_SECRET=replace-with-a-long-random-secret
 AUTH_USERS=admin:change-this-password
+ENABLE_SIGNUP=true
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
 ```
 
 Run the development server:
@@ -76,19 +79,24 @@ The backend flow is:
 - The browser never receives `OPENAI_API_KEY`.
 - OpenAI calls happen only in the Next.js API route running on the server.
 - If you use an OpenAI-compatible third-party API platform, set `OPENAI_BASE_URL` to that platform's `/v1` endpoint.
-- Public deployments require login. Configure `AUTH_USERS` as `username:password`.
+- Public deployments require login. Configure `AUTH_USERS` for fixed admin users, or configure Upstash Redis to allow registration.
 - Use a strong `AUTH_SECRET` in production; it signs the login cookie.
 
-## Login
+## Users And Login
 
-The app includes a simple server-side login gate for public web deployment.
+The app includes a server-side user system for public web deployment.
 
 ```bash
 AUTH_SECRET=replace-with-a-long-random-secret
 AUTH_USERS=admin:change-this-password,friend:another-password
+ENABLE_SIGNUP=true
+UPSTASH_REDIS_REST_URL=your-upstash-rest-url
+UPSTASH_REDIS_REST_TOKEN=your-upstash-rest-token
 ```
 
-Users visit `/login`, then the app sets an HttpOnly session cookie. The canvas page and the image generation/upload/download API routes all require this cookie.
+Users visit `/login`, then they can either log in or register. Registered users are stored in Upstash Redis with salted password hashes. The canvas page and the image generation/upload/download API routes all require the HttpOnly session cookie.
+
+`AUTH_USERS` remains useful for fixed admin accounts. Registered users require `ENABLE_SIGNUP=true` plus the two Upstash Redis variables.
 
 For local development only, if `AUTH_USERS` is missing, the fallback login is:
 
