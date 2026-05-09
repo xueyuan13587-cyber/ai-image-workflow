@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 
 import { getAuthUsers } from "@/lib/auth";
+import { isRedisConfigured, storeGet, storeSetNx } from "@/lib/redis-store";
 
 type StoredUser = {
   username: string;
@@ -8,30 +9,11 @@ type StoredUser = {
   createdAt: string;
 };
 
-type RedisResponse<T> = {
-  result?: T;
-  error?: string;
-};
-
 const USERNAME_PATTERN = /^[a-zA-Z0-9_-]{3,24}$/;
 const PASSWORD_MIN_LENGTH = 6;
 
-function getRedisConfig() {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-
-  if (!url || !token) {
-    return null;
-  }
-
-  return {
-    url: url.replace(/\/$/, ""),
-    token
-  };
-}
-
 export function isUserDatabaseConfigured() {
-  return Boolean(getRedisConfig());
+  return isRedisConfigured();
 }
 
 export function isSignupEnabled() {
@@ -40,31 +22,6 @@ export function isSignupEnabled() {
 
 function getUserKey(username: string) {
   return `user:${username.toLowerCase()}`;
-}
-
-async function redisCommand<T>(command: unknown[]) {
-  const config = getRedisConfig();
-
-  if (!config) {
-    throw new Error("User database is not configured.");
-  }
-
-  const response = await fetch(config.url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${config.token}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(command),
-    cache: "no-store"
-  });
-  const payload = (await response.json()) as RedisResponse<T>;
-
-  if (!response.ok || payload.error) {
-    throw new Error(payload.error ?? "User database request failed.");
-  }
-
-  return payload.result;
 }
 
 function hashPassword(password: string, salt = crypto.randomBytes(16).toString("hex")) {
@@ -115,13 +72,7 @@ async function getStoredUser(username: string) {
     return null;
   }
 
-  const result = await redisCommand<string | null>(["GET", getUserKey(username)]);
-
-  if (!result) {
-    return null;
-  }
-
-  return JSON.parse(result) as StoredUser;
+  return await storeGet<StoredUser>(getUserKey(username));
 }
 
 export async function createUser(username: string, password: string) {
@@ -145,14 +96,9 @@ export async function createUser(username: string, password: string) {
     passwordHash: hashPassword(password),
     createdAt: new Date().toISOString()
   };
-  const result = await redisCommand<string | null>([
-    "SET",
-    getUserKey(normalizedUsername),
-    JSON.stringify(user),
-    "NX"
-  ]);
+  const created = await storeSetNx(getUserKey(normalizedUsername), user);
 
-  if (result !== "OK") {
+  if (!created) {
     throw new Error("这个账号已经被注册。");
   }
 

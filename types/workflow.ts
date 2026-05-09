@@ -85,6 +85,17 @@ export type WorkflowJson = {
 
 export type RunWorkflowResponse = {
   workflow: WorkflowJson;
+  task?: {
+    id: string;
+    status: "pending" | "processing" | "success" | "failed";
+    feature: string;
+    costCredits: number;
+    refundedCredits?: number;
+  };
+  billing?: {
+    creditsBefore?: number;
+    creditsAfter?: number;
+  };
   result: {
     imageUrl: string;
     images?: Array<{

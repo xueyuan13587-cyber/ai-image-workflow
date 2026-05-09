@@ -40,6 +40,8 @@ OPENAI_IMAGE_SIZE=1024x1024 # optional fallback
 OPENAI_IMAGE_QUALITY=auto # optional fallback
 AUTH_SECRET=replace-with-a-long-random-secret
 AUTH_USERS=admin:change-this-password
+ADMIN_USERS=admin
+DEFAULT_USER_CREDITS=100
 ENABLE_SIGNUP=true
 UPSTASH_REDIS_REST_URL=
 UPSTASH_REDIS_REST_TOKEN=
@@ -97,6 +99,16 @@ UPSTASH_REDIS_REST_TOKEN=your-upstash-rest-token
 Users visit `/login`, then they can either log in or register. Registered users are stored in Upstash Redis with salted password hashes. The canvas page and the image generation/upload/download API routes all require the HttpOnly session cookie.
 
 `AUTH_USERS` remains useful for fixed admin accounts. Registered users require `ENABLE_SIGNUP=true` plus the two Upstash Redis variables.
+
+## Platform Features
+
+- Generation requests are recorded as tasks with `pending`, `processing`, `success`, and `failed` states.
+- The server calculates credit cost from model, resolution, detail, feature type, and image count.
+- Credits are deducted before generation starts.
+- Failed generation tasks automatically refund the deducted credits.
+- `/admin` provides model management, channel management, sensitive words, templates, task logs, and platform stats.
+- `ADMIN_USERS` controls who can enter `/admin`.
+- `DEFAULT_USER_CREDITS` controls the initial credit balance for new users.
 
 For local development only, if `AUTH_USERS` is missing, the fallback login is:
 

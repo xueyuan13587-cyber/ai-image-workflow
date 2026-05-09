@@ -5,12 +5,14 @@ import "@xyflow/react/dist/style.css";
 import { Controls, MiniMap, ReactFlow, type NodeTypes } from "@xyflow/react";
 import {
   Braces,
+  Coins,
   Download,
   History,
   Image as ImageIcon,
   ImagePlus,
   LogOut,
   Play,
+  Shield,
   Sparkles,
   Trash2
 } from "lucide-react";
@@ -42,6 +44,22 @@ const nodeButtons: Array<{
   { type: "imageGenerate", label: "生成图", icon: Sparkles },
   { type: "imagePreview", label: "预览图", icon: ImageIcon }
 ];
+
+type AccountState = {
+  user: {
+    username: string;
+    isAdmin: boolean;
+    credits: number;
+  };
+  tasks: Array<{
+    id: string;
+    status: "pending" | "processing" | "success" | "failed";
+    model: string;
+    costCredits: number;
+    refundedCredits?: number;
+    createdAt: string;
+  }>;
+};
 
 function formatHistoryTime(value: string) {
   return new Intl.DateTimeFormat("zh-CN", {
@@ -159,10 +177,28 @@ export function WorkflowCanvas({ username }: { username?: string }) {
     toWorkflowJson
   } = useWorkflowStore();
   const [panel, setPanel] = useState<"history" | "json" | null>("history");
+  const [account, setAccount] = useState<AccountState | null>(null);
 
   useEffect(() => {
     loadHistory();
   }, [loadHistory]);
+
+  async function refreshAccount() {
+    const response = await fetch("/api/account/me", { cache: "no-store" });
+
+    if (response.status === 401) {
+      window.location.href = "/login";
+      return;
+    }
+
+    if (response.ok) {
+      setAccount((await response.json()) as AccountState);
+    }
+  }
+
+  useEffect(() => {
+    refreshAccount();
+  }, []);
 
   const workflowJson = JSON.stringify(toWorkflowJson(), null, 2);
 
@@ -189,6 +225,7 @@ export function WorkflowCanvas({ username }: { username?: string }) {
 
       setRunResult(payload as RunWorkflowResponse);
       setPanel("history");
+      refreshAccount();
     } catch (runError) {
       setRunState(
         "error",
@@ -229,6 +266,17 @@ export function WorkflowCanvas({ username }: { username?: string }) {
             <span className="tapnow-pill hidden sm:inline-flex" title="当前登录账号">
               {username}
             </span>
+          )}
+          {account && (
+            <span className="tapnow-pill" title="剩余积分">
+              <Coins className="h-4 w-4" />
+              {account.user.credits}
+            </span>
+          )}
+          {account?.user.isAdmin && (
+            <a className="tapnow-pill" href="/admin" title="后台管理">
+              <Shield className="h-4 w-4" />
+            </a>
           )}
           <button
             className="tapnow-pill"

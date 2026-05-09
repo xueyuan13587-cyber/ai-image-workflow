@@ -44,6 +44,8 @@ OPENAI_IMAGE_SIZE=1024x1024
 OPENAI_IMAGE_QUALITY=auto
 AUTH_SECRET=replace-with-a-long-random-secret
 AUTH_USERS=admin:change-this-password
+ADMIN_USERS=admin
+DEFAULT_USER_CREDITS=100
 ENABLE_SIGNUP=true
 UPSTASH_REDIS_REST_URL=your-upstash-rest-url
 UPSTASH_REDIS_REST_TOKEN=your-upstash-rest-token
@@ -67,6 +69,9 @@ AUTH_USERS=alice:strong-password,bob:another-strong-password
 ```
 
 `AUTH_SECRET` should be a long random string. Do not reuse the example value.
+
+`ADMIN_USERS` controls who can enter `/admin`. `DEFAULT_USER_CREDITS` controls
+the initial credits given to a user the first time the platform sees them.
 
 `AUTH_USERS` is for fixed admin accounts. To allow normal users to register on
 the website, create a free Upstash Redis database and add its REST URL and REST
