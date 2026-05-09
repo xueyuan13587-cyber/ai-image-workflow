@@ -137,7 +137,12 @@ function CustomSelect<T extends string>({
   const selected = options.find((option) => option.value === value) ?? options[0];
 
   return (
-    <div className={`tapnow-menu-wrap ${className}`}>
+    <div
+      className={`nodrag nowheel tapnow-menu-wrap ${className}`}
+      onMouseDown={(event) => event.stopPropagation()}
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
+    >
       <button
         className="tapnow-menu-trigger"
         type="button"
@@ -150,7 +155,12 @@ function CustomSelect<T extends string>({
       </button>
 
       {open && (
-        <div className="tapnow-menu-list">
+        <div
+          className="tapnow-menu-list"
+          onMouseDown={(event) => event.stopPropagation()}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => event.stopPropagation()}
+        >
           {options.map((option) => (
             <button
               key={option.value}

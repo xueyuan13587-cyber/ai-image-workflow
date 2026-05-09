@@ -383,7 +383,7 @@ body {
   align-items: center;
   gap: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 0 92px 14px 18px;
+  padding: 0 42px 14px 28px;
   color: rgba(255, 255, 255, 0.9);
 }
 
@@ -396,7 +396,7 @@ body {
 }
 
 .tapnow-compose-controls {
-  overflow: hidden;
+  overflow: visible;
 }
 
 .tapnow-compose-actions {
@@ -442,7 +442,7 @@ body {
   position: absolute;
   left: 0;
   bottom: calc(100% + 8px);
-  z-index: 40;
+  z-index: 90;
   display: grid;
   min-width: 100%;
   gap: 4px;
