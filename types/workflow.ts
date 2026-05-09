@@ -104,6 +104,7 @@ export type RunWorkflowResponse = {
     }>;
     mimeType: string;
     prompt: string;
+    generateNodeId?: string;
     provider: "openai";
     model: string;
   };

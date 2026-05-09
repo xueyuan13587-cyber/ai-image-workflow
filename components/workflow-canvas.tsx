@@ -202,14 +202,24 @@ export function WorkflowCanvas({ username }: { username?: string }) {
     refreshAccount();
   }, []);
 
-  async function runWorkflow() {
-    setRunState("running");
+  async function runWorkflow(event?: Event) {
+    const generateNodeId =
+      event instanceof CustomEvent &&
+      typeof event.detail?.generateNodeId === "string"
+        ? event.detail.generateNodeId
+        : undefined;
+
+    setRunState("running", undefined, generateNodeId);
 
     try {
+      const workflow = toWorkflowJson();
       const response = await fetch("/api/workflows/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(toWorkflowJson())
+        body: JSON.stringify({
+          ...workflow,
+          targetGenerateNodeId: generateNodeId
+        })
       });
       const payload = (await response.json()) as
         | RunWorkflowResponse
@@ -227,7 +237,8 @@ export function WorkflowCanvas({ username }: { username?: string }) {
     } catch (runError) {
       setRunState(
         "error",
-        runError instanceof Error ? runError.message : "工作流运行失败。"
+        runError instanceof Error ? runError.message : "工作流运行失败。",
+        generateNodeId
       );
     }
   }

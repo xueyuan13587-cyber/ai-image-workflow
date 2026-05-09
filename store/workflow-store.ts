@@ -43,7 +43,7 @@ type WorkflowStore = {
   loadHistory: () => void;
   clearHistory: () => void;
   restoreHistoryItem: (item: ImageHistoryItem) => void;
-  setRunState: (state: RunState, error?: string) => void;
+  setRunState: (state: RunState, error?: string, generateNodeId?: string) => void;
   setRunResult: (result: RunWorkflowResponse) => void;
   toWorkflowJson: () => WorkflowJson;
 };
@@ -172,9 +172,33 @@ function writeHistory(history: ImageHistoryItem[]) {
   }
 }
 
-function applyPreviewImage(nodes: WorkflowNode[], imageUrl: string) {
+function getConnectedPreviewIds(edges: WorkflowEdge[], generateNodeId?: string) {
+  if (!generateNodeId) return null;
+
+  return new Set(
+    edges
+      .filter((edge) => edge.source === generateNodeId)
+      .map((edge) => edge.target)
+  );
+}
+
+function shouldUpdatePreview(
+  node: WorkflowNode,
+  connectedPreviewIds: Set<string> | null
+) {
+  return (
+    node.type === "imagePreview" &&
+    (!connectedPreviewIds || connectedPreviewIds.has(node.id))
+  );
+}
+
+function applyPreviewImage(
+  nodes: WorkflowNode[],
+  imageUrl: string,
+  connectedPreviewIds: Set<string> | null = null
+) {
   return nodes.map((node) =>
-    node.type === "imagePreview"
+    shouldUpdatePreview(node, connectedPreviewIds)
       ? {
           ...node,
           data: {
@@ -307,12 +331,14 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       nodes: applyPreviewImage(get().nodes, item.imageUrl)
     });
   },
-  setRunState: (runState, error) => {
+  setRunState: (runState, error, generateNodeId) => {
+    const connectedPreviewIds = getConnectedPreviewIds(get().edges, generateNodeId);
+
     set({
       runState,
       error,
       nodes: get().nodes.map((node) =>
-        node.type === "imagePreview"
+        shouldUpdatePreview(node, connectedPreviewIds)
           ? {
               ...node,
               data: {
@@ -346,12 +372,21 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
 
     writeHistory(nextHistory);
 
+    const connectedPreviewIds = getConnectedPreviewIds(
+      get().edges,
+      lastRun.result.generateNodeId
+    );
+
     set({
       lastRun,
       history: nextHistory,
       runState: "success",
       error: undefined,
-      nodes: applyPreviewImage(get().nodes, resultImages[0].imageUrl)
+      nodes: applyPreviewImage(
+        get().nodes,
+        resultImages[0].imageUrl,
+        connectedPreviewIds
+      )
     });
   },
   toWorkflowJson: () => ({

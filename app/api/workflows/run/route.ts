@@ -26,8 +26,12 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
+    const targetGenerateNodeId =
+      typeof body.targetGenerateNodeId === "string"
+        ? body.targetGenerateNodeId
+        : undefined;
     const workflow = workflowSchema.parse(body) as WorkflowJson;
-    const resolved = resolveImageWorkflow(workflow);
+    const resolved = resolveImageWorkflow(workflow, targetGenerateNodeId);
     const creditsBefore = await getUserCredits(session.username);
     createdTask = await createGenerationTask({
       userId: session.username,
@@ -68,6 +72,7 @@ export async function POST(request: Request) {
         mimeType: firstImage.mimeType,
         images: generation.images,
         prompt: resolved.prompt,
+        generateNodeId: targetGenerateNodeId,
         provider: "openai",
         model: generation.model
       }

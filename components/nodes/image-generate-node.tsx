@@ -244,10 +244,14 @@ export function ImageGenerateNode({ id, data }: NodeProps<WorkflowNode>) {
               : node
           )
         };
+        const requestBody = {
+          ...draftWorkflow,
+          targetGenerateNodeId: id
+        };
         const response = await fetch("/api/pricing/estimate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(draftWorkflow),
+          body: JSON.stringify(requestBody),
           signal: controller.signal
         });
 
@@ -315,7 +319,11 @@ export function ImageGenerateNode({ id, data }: NodeProps<WorkflowNode>) {
 
   function requestRun() {
     commitPrompt();
-    window.dispatchEvent(new CustomEvent("workflow-run-request"));
+    window.dispatchEvent(
+      new CustomEvent("workflow-run-request", {
+        detail: { generateNodeId: id }
+      })
+    );
   }
 
   return (

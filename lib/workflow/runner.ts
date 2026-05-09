@@ -42,11 +42,21 @@ const STYLE_TEXT: Record<string, string> = {
   watercolor: "watercolor painting, soft pigment edges, handmade texture"
 };
 
-function assertNodeExists(workflow: ParsedWorkflow, type: string) {
-  const node = workflow.nodes.find((item) => item.type === type);
+function assertNodeExists(
+  workflow: ParsedWorkflow,
+  type: string,
+  nodeId?: string
+) {
+  const node = nodeId
+    ? workflow.nodes.find((item) => item.id === nodeId && item.type === type)
+    : workflow.nodes.find((item) => item.type === type);
 
   if (!node) {
-    throw new Error(`Workflow is missing required ${type} node.`);
+    throw new Error(
+      nodeId
+        ? `Workflow is missing required ${type} node: ${nodeId}.`
+        : `Workflow is missing required ${type} node.`
+    );
   }
 
   return node;
@@ -99,8 +109,11 @@ function inferAspectRatio(prompt: string): Exclude<ImageAspectRatio, "auto"> {
   return "1:1";
 }
 
-export function resolveImageWorkflow(workflow: ParsedWorkflow): ResolvedImageWorkflow {
-  const generateNode = assertNodeExists(workflow, "imageGenerate");
+export function resolveImageWorkflow(
+  workflow: ParsedWorkflow,
+  generateNodeId?: string
+): ResolvedImageWorkflow {
+  const generateNode = assertNodeExists(workflow, "imageGenerate", generateNodeId);
   const upstreamNodes = getAncestors(workflow, generateNode.id);
 
   const promptNode =
