@@ -27,6 +27,7 @@ export type ModelPricing = {
   enabled: boolean;
   channel: string;
   baseCredits: number;
+  multiplier: number;
 };
 
 export type ChannelConfig = {
@@ -97,28 +98,32 @@ const defaultModels: ModelPricing[] = [
     name: "Image 1.5",
     enabled: true,
     channel: "gptsapi-v1",
-    baseCredits: 4
+    baseCredits: 4,
+    multiplier: 1
   },
   {
     id: "gpt-image-2-plus",
     name: "Image 2",
     enabled: true,
     channel: "gptsapi-v3-openai",
-    baseCredits: 10
+    baseCredits: 10,
+    multiplier: 1
   },
   {
     id: "gemini-3.1-flash-image-preview",
     name: "Banana2",
     enabled: true,
     channel: "gptsapi-v3-google",
-    baseCredits: 6
+    baseCredits: 6,
+    multiplier: 1
   },
   {
     id: "gemini-3-pro-image-preview",
     name: "Banana Pro",
     enabled: true,
     channel: "gptsapi-v3-google",
-    baseCredits: 12
+    baseCredits: 12,
+    multiplier: 1
   }
 ];
 
@@ -193,12 +198,14 @@ function normalizeModels(models: unknown): ModelPricing[] {
         item.id === fallback.id
     );
     const baseCredits = Number(stored?.baseCredits);
+    const multiplier = Number(stored?.multiplier);
 
     return {
       ...fallback,
       ...stored,
       enabled: typeof stored?.enabled === "boolean" ? stored.enabled : fallback.enabled,
-      baseCredits: Number.isFinite(baseCredits) ? Math.max(1, Math.round(baseCredits)) : fallback.baseCredits
+      baseCredits: Number.isFinite(baseCredits) ? Math.max(1, Math.round(baseCredits)) : fallback.baseCredits,
+      multiplier: Number.isFinite(multiplier) && multiplier > 0 ? Math.round(multiplier * 100) / 100 : fallback.multiplier
     };
   });
 }
@@ -450,9 +457,11 @@ export async function calculateTaskCost(
   const rules = await getPricingRules();
   const model = models.find((item) => item.id === resolved.model);
   const baseCredits = model?.baseCredits ?? 6;
+  const modelMultiplier = model?.multiplier ?? 1;
   const count = resolved.count ?? 1;
   const rawCost =
     baseCredits *
+    modelMultiplier *
     getResolutionMultiplier(resolved.resolution, rules) *
     getDetailMultiplier(resolved.detail, rules) *
     getFeatureMultiplier(feature, rules) *

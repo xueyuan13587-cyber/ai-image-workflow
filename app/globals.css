@@ -529,6 +529,21 @@ body {
   transform: none;
 }
 
+.tapnow-cost-pill {
+  display: inline-flex;
+  height: 36px;
+  min-width: 64px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(103, 232, 249, 0.18);
+  background: rgba(103, 232, 249, 0.08);
+  color: rgba(207, 250, 254, 0.92);
+  font-size: 14px;
+  font-weight: 700;
+}
+
 .tapnow-compose-spinner {
   height: 16px;
   width: 16px;

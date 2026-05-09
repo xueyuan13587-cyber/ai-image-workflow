@@ -2,7 +2,7 @@
 
 import "@xyflow/react/dist/style.css";
 
-import { Controls, MiniMap, ReactFlow, type NodeTypes } from "@xyflow/react";
+import { Controls, ReactFlow, type NodeTypes } from "@xyflow/react";
 import {
   Braces,
   Coins,
@@ -11,11 +11,11 @@ import {
   Image as ImageIcon,
   ImagePlus,
   LogOut,
-  Play,
   Shield,
   Sparkles,
   Trash2
 } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { ImageGenerateNode } from "@/components/nodes/image-generate-node";
@@ -41,8 +41,8 @@ const nodeButtons: Array<{
   icon: typeof Sparkles;
 }> = [
   { type: "referenceImage", label: "参考图", icon: ImagePlus },
-  { type: "imageGenerate", label: "生成图", icon: Sparkles },
-  { type: "imagePreview", label: "预览图", icon: ImageIcon }
+  { type: "imageGenerate", label: "图片生成", icon: Sparkles },
+  { type: "imagePreview", label: "图片预览", icon: ImageIcon }
 ];
 
 type AccountState = {
@@ -73,30 +73,35 @@ function formatHistoryTime(value: string) {
 function HistoryPanel({
   history,
   onRestore,
-  onClear
+  onClear,
+  onClose
 }: {
   history: ImageHistoryItem[];
   onRestore: (item: ImageHistoryItem) => void;
   onClear: () => void;
+  onClose: () => void;
 }) {
   return (
-    <aside className="relative z-20 w-[420px] overflow-auto border-l border-white/10 bg-black/65 text-white backdrop-blur-xl">
-      <div className="flex items-center justify-between border-b border-white/10 p-4">
+    <aside className="absolute right-6 top-24 z-30 max-h-[calc(100vh-8rem)] w-[340px] overflow-auto rounded-2xl border border-white/10 bg-black/70 text-white shadow-2xl backdrop-blur-xl">
+      <div className="flex items-center justify-between gap-3 border-b border-white/10 p-4">
         <div>
-          <h2 className="text-sm font-semibold">图片历史记录</h2>
-          <p className="mt-1 text-xs leading-5 text-white/45">
-            生成成功后会自动保存在当前浏览器中。
-          </p>
+          <h2 className="text-sm font-semibold">图片历史</h2>
+          <p className="mt-1 text-xs leading-5 text-white/45">最近生成的作品</p>
         </div>
-        <button
-          className="tapnow-pill !min-h-8 !px-3"
-          type="button"
-          onClick={onClear}
-          title="清空历史"
-          disabled={history.length === 0}
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            className="tapnow-pill !min-h-8 !px-3"
+            type="button"
+            onClick={onClear}
+            title="清空历史"
+            disabled={history.length === 0}
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+          <button className="tapnow-pill !min-h-8 !px-3" type="button" onClick={onClose}>
+            关闭
+          </button>
+        </div>
       </div>
 
       {history.length === 0 ? (
@@ -106,7 +111,7 @@ function HistoryPanel({
           {history.map((item, index) => (
             <div
               key={item.id}
-              className="group grid grid-cols-[88px_1fr] gap-3 rounded-xl border border-white/10 bg-white/[0.05] p-2 text-left transition hover:border-cyan-300/45 hover:bg-white/[0.08]"
+              className="group grid grid-cols-[72px_1fr] gap-3 rounded-xl border border-white/10 bg-white/[0.05] p-2 text-left transition hover:border-cyan-300/45 hover:bg-white/[0.08]"
             >
               <button
                 type="button"
@@ -140,7 +145,7 @@ function HistoryPanel({
                 <button
                   type="button"
                   onClick={() => onRestore(item)}
-                  className="mt-1 line-clamp-3 text-left text-xs leading-5 text-white/50"
+                  className="mt-1 line-clamp-2 text-left text-xs leading-5 text-white/50"
                   title="恢复到预览节点"
                 >
                   {item.prompt}
@@ -162,7 +167,6 @@ export function WorkflowCanvas({ username }: { username?: string }) {
     nodes,
     edges,
     history,
-    runState,
     error,
     lastRun,
     onNodesChange,
@@ -176,7 +180,7 @@ export function WorkflowCanvas({ username }: { username?: string }) {
     setRunResult,
     toWorkflowJson
   } = useWorkflowStore();
-  const [panel, setPanel] = useState<"history" | "json" | null>("history");
+  const [panel, setPanel] = useState<"history" | "json" | null>(null);
   const [account, setAccount] = useState<AccountState | null>(null);
 
   useEffect(() => {
@@ -217,9 +221,7 @@ export function WorkflowCanvas({ username }: { username?: string }) {
 
       if (!response.ok) {
         throw new Error(
-          "error" in payload && payload.error
-            ? payload.error
-            : "工作流运行失败。"
+          "error" in payload && payload.error ? payload.error : "工作流运行失败。"
         );
       }
 
@@ -258,7 +260,7 @@ export function WorkflowCanvas({ username }: { username?: string }) {
           </div>
           <div>
             <h1 className="text-base font-semibold tracking-wide">创意画布</h1>
-            <p className="text-xs text-white/45">AI 原生图片工作流</p>
+            <p className="text-xs text-white/45">AI 图片聚合创作台</p>
           </div>
         </div>
         <div className="pointer-events-auto flex items-center gap-2">
@@ -274,18 +276,10 @@ export function WorkflowCanvas({ username }: { username?: string }) {
             </span>
           )}
           {account?.user.isAdmin && (
-            <a className="tapnow-pill" href="/admin" title="后台管理">
+            <Link className="tapnow-pill" href="/admin" title="后台管理">
               <Shield className="h-4 w-4" />
-            </a>
+            </Link>
           )}
-          <button
-            className="tapnow-pill"
-            type="button"
-            onClick={() => setPanel((value) => (value === "history" ? null : "history"))}
-            title="图片历史记录"
-          >
-            <History className="h-4 w-4" />
-          </button>
           <button
             className="tapnow-pill"
             type="button"
@@ -293,16 +287,6 @@ export function WorkflowCanvas({ username }: { username?: string }) {
             title="显示或隐藏工作流 JSON"
           >
             <Braces className="h-4 w-4" />
-          </button>
-          <button
-            className="tapnow-run"
-            type="button"
-            onClick={runWorkflow}
-            disabled={runState === "running"}
-            title="运行工作流"
-          >
-            <Play className="h-4 w-4" />
-            {runState === "running" ? "生成中" : "运行"}
           </button>
           <button
             className="tapnow-pill"
@@ -321,7 +305,7 @@ export function WorkflowCanvas({ username }: { username?: string }) {
         </div>
       )}
 
-      <main className="grid h-full min-h-0 grid-cols-[1fr_auto]">
+      <main className="relative h-full min-h-0">
         <aside className="tapnow-leftbar absolute left-7 top-1/2 z-20 -translate-y-1/2">
           {nodeButtons.map((item) => {
             const Icon = item.icon;
@@ -348,7 +332,7 @@ export function WorkflowCanvas({ username }: { username?: string }) {
           </button>
         </aside>
 
-        <section className="min-w-0">
+        <section className="h-full min-w-0">
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -360,17 +344,6 @@ export function WorkflowCanvas({ username }: { username?: string }) {
             className="tapnow-canvas"
           >
             <Controls position="bottom-left" />
-            <MiniMap
-              position="bottom-right"
-              pannable
-              zoomable
-              nodeColor={(node) => {
-                if (node.type === "textPrompt") return "#2563eb";
-                if (node.type === "stylePreset") return "#10b981";
-                if (node.type === "imageGenerate") return "#f97316";
-                return "#64748b";
-              }}
-            />
           </ReactFlow>
         </section>
 
@@ -379,15 +352,16 @@ export function WorkflowCanvas({ username }: { username?: string }) {
             history={history}
             onRestore={restoreHistoryItem}
             onClear={clearHistory}
+            onClose={() => setPanel(null)}
           />
         )}
 
         {panel === "json" && (
-          <aside className="relative z-20 w-[420px] overflow-auto border-l border-white/10 bg-black/65 text-white backdrop-blur-xl">
+          <aside className="absolute right-6 top-24 z-30 max-h-[calc(100vh-8rem)] w-[420px] overflow-auto rounded-2xl border border-white/10 bg-black/70 text-white shadow-2xl backdrop-blur-xl">
             <div className="border-b border-white/10 p-4">
               <h2 className="text-sm font-semibold">工作流 JSON</h2>
               <p className="mt-1 text-xs leading-5 text-white/45">
-                点击运行时，前端会把这份节点和连线数据发送到后端。
+                运行时前端会把这份节点和连线数据发送到后端。
               </p>
             </div>
             <pre className="whitespace-pre-wrap p-4 text-xs leading-5 text-white/60">

@@ -25,6 +25,7 @@ type AdminOverview = {
     enabled: boolean;
     channel: string;
     baseCredits: number;
+    multiplier: number;
   }>;
   channels: Array<{
     id: string;
@@ -146,7 +147,8 @@ export function AdminPlatformPanel({ initial }: { initial: AdminOverview }) {
         body: JSON.stringify({
           models: models.map((model) => ({
             ...model,
-            baseCredits: Math.max(1, Math.round(Number(model.baseCredits) || 1))
+            baseCredits: Math.max(1, Math.round(Number(model.baseCredits) || 1)),
+            multiplier: toSafeMultiplier(String(model.multiplier))
           })),
           channels,
           pricingRules,
@@ -244,6 +246,25 @@ export function AdminPlatformPanel({ initial }: { initial: AdminOverview }) {
                           itemIndex === index
                             ? { ...item, baseCredits: nextCredits }
                             : item
+                        )
+                      );
+                    }}
+                  />
+                </label>
+                <label className="mt-3 grid gap-1 text-xs text-white/45">
+                  模型倍率
+                  <input
+                    className="h-9 rounded-lg border border-white/10 bg-black/25 px-3 text-sm text-white outline-none"
+                    type="number"
+                    min={0.1}
+                    step={0.1}
+                    value={model.multiplier}
+                    onChange={(event) => {
+                      const multiplier = toSafeMultiplier(event.currentTarget.value);
+
+                      setModels((items) =>
+                        items.map((item, itemIndex) =>
+                          itemIndex === index ? { ...item, multiplier } : item
                         )
                       );
                     }}

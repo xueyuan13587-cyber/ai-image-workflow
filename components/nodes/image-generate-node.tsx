@@ -3,6 +3,7 @@
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import {
   ChevronDown,
+  Coins,
   GripHorizontal,
   ImagePlus,
   Plus,
@@ -173,11 +174,13 @@ function CustomSelect<T extends string>({
 export function ImageGenerateNode({ id, data }: NodeProps<WorkflowNode>) {
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData);
   const addReferenceForNode = useWorkflowStore((state) => state.addReferenceForNode);
+  const toWorkflowJson = useWorkflowStore((state) => state.toWorkflowJson);
   const nodes = useWorkflowStore((state) => state.nodes);
   const edges = useWorkflowStore((state) => state.edges);
   const nodeData = data as ImageGenerateData;
   const [referenceMenuOpen, setReferenceMenuOpen] = useState(false);
   const [draftPrompt, setDraftPrompt] = useState(nodeData.prompt ?? "");
+  const [estimatedCost, setEstimatedCost] = useState<number | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const currentModel = nodeData.model ?? "gpt-image-1.5";
   const supportedAspectRatios = modelAspectRatios[currentModel] ?? ["1:1"];
@@ -211,6 +214,66 @@ export function ImageGenerateNode({ id, data }: NodeProps<WorkflowNode>) {
   useEffect(() => {
     setDraftPrompt(nodeData.prompt ?? "");
   }, [nodeData.prompt]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      try {
+        const workflow = toWorkflowJson();
+        const draftWorkflow = {
+          ...workflow,
+          nodes: workflow.nodes.map((node) =>
+            node.id === id
+              ? {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    prompt: draftPrompt
+                  }
+                }
+              : node
+          )
+        };
+        const response = await fetch("/api/pricing/estimate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(draftWorkflow),
+          signal: controller.signal
+        });
+
+        if (!response.ok) {
+          setEstimatedCost(null);
+          return;
+        }
+
+        const payload = (await response.json()) as { costCredits?: number };
+        setEstimatedCost(
+          typeof payload.costCredits === "number" ? payload.costCredits : null
+        );
+      } catch (error) {
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
+          setEstimatedCost(null);
+        }
+      }
+    }, 350);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [
+    currentAspectRatio,
+    currentCount,
+    currentDetail,
+    currentModel,
+    currentResolution,
+    draftPrompt,
+    edges,
+    id,
+    nodeData.preset,
+    nodes,
+    toWorkflowJson
+  ]);
 
   function commitPrompt(nextPrompt = draftPrompt) {
     if (nextPrompt !== nodeData.prompt) {
@@ -435,6 +498,10 @@ export function ImageGenerateNode({ id, data }: NodeProps<WorkflowNode>) {
             }
             className="min-w-[78px]"
           />
+          <span className="tapnow-cost-pill" title="预计消耗积分">
+            <Coins className="h-4 w-4" />
+            {estimatedCost ?? "--"}
+          </span>
           <button
             className="tapnow-compose-submit"
             type="button"
