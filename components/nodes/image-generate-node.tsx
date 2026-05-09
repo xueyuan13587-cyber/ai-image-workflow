@@ -424,6 +424,7 @@ export function ImageGenerateNode({ id, data }: NodeProps<WorkflowNode>) {
       </div>
 
       <div className="tapnow-compose-toolbar nodrag">
+        <div className="tapnow-compose-controls">
         <CustomSelect
           icon={<Sparkles className="h-4 w-4 text-white/65" />}
           label="模型"
@@ -439,7 +440,7 @@ export function ImageGenerateNode({ id, data }: NodeProps<WorkflowNode>) {
                 : nextSupportedRatios[0]
             });
           }}
-          className="min-w-[142px]"
+          className="min-w-[132px]"
         />
 
         <span className="tapnow-compose-divider" />
@@ -452,7 +453,7 @@ export function ImageGenerateNode({ id, data }: NodeProps<WorkflowNode>) {
             supportedAspectRatios.includes(aspectRatio.value)
           )}
           onChange={(aspectRatio) => updateNodeData(id, { aspectRatio })}
-          className="min-w-[96px]"
+          className="min-w-[84px]"
         />
 
         <span className="tapnow-compose-dot">·</span>
@@ -462,7 +463,7 @@ export function ImageGenerateNode({ id, data }: NodeProps<WorkflowNode>) {
           value={currentResolution}
           options={resolutions}
           onChange={(resolution) => updateNodeData(id, { resolution })}
-          className="min-w-[68px]"
+          className="min-w-[64px]"
         />
 
         <span className="tapnow-compose-dot">·</span>
@@ -472,7 +473,7 @@ export function ImageGenerateNode({ id, data }: NodeProps<WorkflowNode>) {
           value={currentDetail}
           options={details}
           onChange={(detail) => updateNodeData(id, { detail })}
-          className="min-w-[64px]"
+          className="min-w-[60px]"
         />
 
         <span className="tapnow-compose-divider" />
@@ -483,10 +484,12 @@ export function ImageGenerateNode({ id, data }: NodeProps<WorkflowNode>) {
           value={nodeData.preset}
           options={presets}
           onChange={(preset) => updateNodeData(id, { preset })}
-          className="min-w-[126px]"
+          className="min-w-[112px]"
         />
 
-        <div className="ml-auto flex items-center gap-3">
+        </div>
+
+        <div className="tapnow-compose-actions">
           <CustomSelect
             label="生成数量"
             value={currentCount}
@@ -496,7 +499,7 @@ export function ImageGenerateNode({ id, data }: NodeProps<WorkflowNode>) {
                 count: Number(count) as ImageGenerateData["count"]
               })
             }
-            className="min-w-[78px]"
+            className="min-w-[70px]"
           />
           <span className="tapnow-cost-pill" title="预计消耗积分">
             <Coins className="h-4 w-4" />
