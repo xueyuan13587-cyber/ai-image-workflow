@@ -15,7 +15,6 @@ import {
   Sparkles,
   Trash2
 } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { ImageGenerateNode } from "@/components/nodes/image-generate-node";
@@ -313,6 +312,7 @@ export function WorkflowCanvas({ username }: { username?: string }) {
   const [rechargePlans, setRechargePlans] = useState<RechargePlan[]>([]);
   const [rechargeOrders, setRechargeOrders] = useState<RechargeOrder[]>([]);
   const [rechargeLoading, setRechargeLoading] = useState(false);
+  const [rechargeLoaded, setRechargeLoaded] = useState(false);
   const [rechargeMessage, setRechargeMessage] = useState("");
 
   useEffect(() => {
@@ -354,15 +354,24 @@ export function WorkflowCanvas({ username }: { username?: string }) {
         const payload = (await ordersResponse.json()) as { orders?: RechargeOrder[] };
         setRechargeOrders(payload.orders ?? []);
       }
+      setRechargeLoaded(true);
     } finally {
       setRechargeLoading(false);
     }
   }
 
+  useEffect(() => {
+    if (account && !rechargeLoaded && !rechargeLoading) {
+      void loadRecharge();
+    }
+  }, [account, rechargeLoaded, rechargeLoading]);
+
   async function openRechargePanel() {
     setPanel((value) => (value === "recharge" ? null : "recharge"));
     setRechargeMessage("");
-    await loadRecharge();
+    if (!rechargeLoaded && !rechargeLoading) {
+      void loadRecharge();
+    }
   }
 
   async function createRechargeOrder(planId: string) {
@@ -498,10 +507,10 @@ export function WorkflowCanvas({ username }: { username?: string }) {
             <Plus className="h-4 w-4" />
             充值
           </button>
-          <Link className="tapnow-pill" href="/admin" title="后台管理">
+          <a className="tapnow-pill" href="/admin" title="后台管理">
             <Shield className="h-4 w-4" />
             后台
-          </Link>
+          </a>
           <button
             className="tapnow-pill"
             type="button"
