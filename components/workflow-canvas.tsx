@@ -403,15 +403,31 @@ export function WorkflowCanvas({ username }: { username?: string }) {
         );
       }
 
-      setRunResult(payload as RunWorkflowResponse);
+      const runPayload = payload as RunWorkflowResponse;
+
+      setRunResult(runPayload);
+      if (typeof runPayload.billing?.creditsAfter === "number") {
+        setAccount((current) =>
+          current
+            ? {
+                ...current,
+                user: {
+                  ...current.user,
+                  credits: runPayload.billing?.creditsAfter ?? current.user.credits
+                }
+              }
+            : current
+        );
+      }
       setPanel("history");
-      refreshAccount();
+      await refreshAccount();
     } catch (runError) {
       setRunState(
         "error",
         runError instanceof Error ? runError.message : "工作流运行失败。",
         generateNodeId
       );
+      await refreshAccount();
     }
   }
 
