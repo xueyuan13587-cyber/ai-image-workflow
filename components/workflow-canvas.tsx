@@ -221,6 +221,18 @@ function RechargePanel({
           </div>
         )}
 
+        {loading && plans.length === 0 && (
+          <div className="rounded-xl border border-white/10 bg-white/[0.05] p-4 text-sm text-white/45">
+            充值套餐加载中...
+          </div>
+        )}
+
+        {!loading && plans.length === 0 && (
+          <div className="rounded-xl border border-white/10 bg-white/[0.05] p-4 text-sm text-white/45">
+            暂无可用充值套餐，请联系管理员在后台配置。
+          </div>
+        )}
+
         {plans.map((plan) => (
           <div key={plan.id} className="rounded-xl border border-white/10 bg-white/[0.05] p-3">
             <div className="flex items-start justify-between gap-3">
@@ -228,12 +240,13 @@ function RechargePanel({
                 <div className="text-sm font-semibold">{plan.name}</div>
                 <div className="mt-1 text-xs text-white/45">{plan.description}</div>
                 <div className="mt-2 text-xs text-white/60">
-                  {plan.credits} 积分
+                  到账 {plan.credits} 积分
                   {plan.bonusCredits ? ` + 赠送 ${plan.bonusCredits}` : ""}
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-lg font-semibold">¥{plan.priceCny}</div>
+                <div className="text-[11px] text-white/38">充值金额</div>
+                <div className="text-lg font-semibold">CNY {plan.priceCny}</div>
                 <button
                   className="tapnow-run mt-2 !min-h-9 !px-4"
                   type="button"
@@ -265,7 +278,7 @@ function RechargePanel({
                     </span>
                   </div>
                   <div className="mt-1 text-white/45">
-                    ¥{order.priceCny} · {order.totalCredits} 积分
+                    CNY {order.priceCny} · {order.totalCredits} 积分
                   </div>
                   <div className="mt-1 text-white/30">{formatHistoryTime(order.createdAt)}</div>
                 </div>
@@ -324,19 +337,25 @@ export function WorkflowCanvas({ username }: { username?: string }) {
   }, []);
 
   async function loadRecharge() {
-    const [plansResponse, ordersResponse] = await Promise.all([
-      fetch("/api/recharge/plans", { cache: "no-store" }),
-      fetch("/api/recharge/orders", { cache: "no-store" })
-    ]);
+    setRechargeLoading(true);
 
-    if (plansResponse.ok) {
-      const payload = (await plansResponse.json()) as { plans?: RechargePlan[] };
-      setRechargePlans(payload.plans ?? []);
-    }
+    try {
+      const [plansResponse, ordersResponse] = await Promise.all([
+        fetch("/api/recharge/plans", { cache: "no-store" }),
+        fetch("/api/recharge/orders", { cache: "no-store" })
+      ]);
 
-    if (ordersResponse.ok) {
-      const payload = (await ordersResponse.json()) as { orders?: RechargeOrder[] };
-      setRechargeOrders(payload.orders ?? []);
+      if (plansResponse.ok) {
+        const payload = (await plansResponse.json()) as { plans?: RechargePlan[] };
+        setRechargePlans(payload.plans ?? []);
+      }
+
+      if (ordersResponse.ok) {
+        const payload = (await ordersResponse.json()) as { orders?: RechargeOrder[] };
+        setRechargeOrders(payload.orders ?? []);
+      }
+    } finally {
+      setRechargeLoading(false);
     }
   }
 
@@ -479,11 +498,10 @@ export function WorkflowCanvas({ username }: { username?: string }) {
             <Plus className="h-4 w-4" />
             充值
           </button>
-          {account?.user.isAdmin && (
-            <Link className="tapnow-pill" href="/admin" title="后台管理">
-              <Shield className="h-4 w-4" />
-            </Link>
-          )}
+          <Link className="tapnow-pill" href="/admin" title="后台管理">
+            <Shield className="h-4 w-4" />
+            后台
+          </Link>
           <button
             className="tapnow-pill"
             type="button"
