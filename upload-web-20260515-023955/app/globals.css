@@ -1,0 +1,678 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #050608;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+.react-flow__node {
+  border-radius: 18px;
+  overflow: visible !important;
+}
+
+.react-flow__node-imagePreview {
+  height: 320px;
+  width: 360px;
+}
+
+.react-flow__edge-path {
+  stroke: rgba(105, 235, 255, 0.58);
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.35));
+}
+
+.react-flow__connection-path {
+  stroke: #67e8f9;
+  stroke-width: 2.5;
+}
+
+.react-flow__handle {
+  transition:
+    box-shadow 120ms ease,
+    outline-color 120ms ease;
+}
+
+.tapnow-shell {
+  position: relative;
+  background:
+    radial-gradient(circle at 52% 92%, rgba(40, 109, 170, 0.42), transparent 32%),
+    radial-gradient(circle at 34% 108%, rgba(190, 91, 62, 0.28), transparent 30%),
+    linear-gradient(180deg, #020305 0%, #06080d 62%, #0b1018 100%);
+}
+
+.tapnow-canvas {
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.12) 1px, transparent 1.5px);
+  background-size: 22px 22px;
+}
+
+.tapnow-logo {
+  position: relative;
+  height: 30px;
+  width: 30px;
+}
+
+.tapnow-logo span {
+  position: absolute;
+  height: 20px;
+  width: 20px;
+  border-radius: 999px;
+  filter: blur(0.2px);
+  mix-blend-mode: screen;
+}
+
+.tapnow-logo span:nth-child(1) {
+  left: 0;
+  top: 5px;
+  background: #ff7ab6;
+}
+
+.tapnow-logo span:nth-child(2) {
+  left: 8px;
+  top: 0;
+  background: #72f08f;
+}
+
+.tapnow-logo span:nth-child(3) {
+  left: 9px;
+  top: 10px;
+  background: #6aa8ff;
+}
+
+.tapnow-pill,
+.tapnow-run,
+.tapnow-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(18px);
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease,
+    background 150ms ease;
+}
+
+.tapnow-pill:hover,
+.tapnow-run:hover,
+.tapnow-tool:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.tapnow-pill {
+  min-height: 36px;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 0 13px;
+  font-size: 12px;
+}
+
+.tapnow-run {
+  min-height: 38px;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 0 16px;
+  color: #071014;
+  background: linear-gradient(135deg, #d9fff7, #76e7ff 52%, #a78bfa);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.tapnow-run:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.tapnow-leftbar {
+  display: flex;
+  width: 44px;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.075);
+  padding: 7px;
+  backdrop-filter: blur(18px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
+}
+
+.tapnow-tool {
+  height: 31px;
+  width: 31px;
+  border-radius: 999px;
+  padding: 0;
+}
+
+.tapnow-node {
+  overflow: visible;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.115), rgba(255, 255, 255, 0.05)),
+    rgba(9, 11, 16, 0.78);
+  color: white;
+  box-shadow:
+    0 28px 60px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(22px);
+}
+
+.tapnow-handle {
+  box-shadow: 0 0 0 5px rgba(103, 232, 249, 0.08);
+}
+
+.tapnow-port {
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: #071014;
+  outline: 7px solid rgba(103, 232, 249, 0.09);
+  transform: translateY(-50%) !important;
+  transform-origin: center center !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.58),
+    0 10px 24px rgba(0, 0, 0, 0.28),
+    0 0 18px rgba(103, 232, 249, 0.28);
+}
+
+.tapnow-port::after {
+  content: "";
+  height: 10px;
+  width: 10px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.55;
+  transition:
+    height 120ms ease,
+    width 120ms ease,
+    opacity 120ms ease;
+}
+
+.tapnow-port:hover {
+  transform: translateY(-50%) !important;
+  outline-color: rgba(103, 232, 249, 0.18);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.86),
+    0 12px 28px rgba(0, 0, 0, 0.34),
+    0 0 26px rgba(103, 232, 249, 0.48);
+}
+
+.tapnow-port:hover::after {
+  height: 14px;
+  width: 14px;
+  opacity: 0.78;
+}
+
+.tapnow-port-source {
+  color: #0b2024;
+}
+
+.tapnow-port-target {
+  color: #1c2328;
+}
+
+.react-flow__controls {
+  left: 24px !important;
+  bottom: 25px !important;
+  display: flex;
+  gap: 2px;
+  overflow: hidden;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+  backdrop-filter: blur(18px);
+}
+
+.react-flow__controls-button {
+  height: 31px;
+  width: 31px;
+  border: 0 !important;
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  fill: currentColor;
+}
+
+.react-flow__minimap {
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.tapnow-compose-node {
+  position: relative;
+  width: 820px;
+  min-height: 292px;
+  overflow: visible;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.115), rgba(255, 255, 255, 0.05)),
+    rgba(9, 11, 16, 0.78);
+  box-shadow:
+    0 28px 60px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(22px);
+  color: white;
+}
+
+.tapnow-compose-head {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 16px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tapnow-compose-drag-handle {
+  display: inline-flex;
+  height: 24px;
+  width: 70px;
+  cursor: grab;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.tapnow-compose-drag-handle:active {
+  cursor: grabbing;
+}
+
+.tapnow-compose-card {
+  position: relative;
+  z-index: 2;
+  margin: 8px 14px 14px;
+  min-height: 132px;
+  overflow: visible;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.055);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.tapnow-compose-card-tools {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 14px 0;
+  padding-left: 2px;
+}
+
+.tapnow-compose-icon {
+  display: inline-flex;
+  height: 42px;
+  width: 48px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.085);
+  color: rgba(255, 255, 255, 0.78);
+  transition:
+    background 150ms ease,
+    transform 150ms ease;
+}
+
+.tapnow-compose-icon:hover {
+  background: rgba(255, 255, 255, 0.14);
+  transform: translateY(-1px);
+}
+
+.tapnow-compose-textarea {
+  position: relative;
+  z-index: 2;
+  min-height: 132px;
+  width: 100%;
+  resize: none;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  padding: 24px 22px 20px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 20px;
+  line-height: 1.45;
+  outline: none;
+}
+
+.tapnow-compose-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.34);
+}
+
+.tapnow-compose-toolbar {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  min-height: 74px;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0 36px 14px 24px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.tapnow-compose-controls,
+.tapnow-compose-actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.tapnow-compose-controls {
+  overflow: visible;
+}
+
+.tapnow-compose-actions {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+}
+
+.tapnow-compose-controls .tapnow-compose-divider,
+.tapnow-compose-controls .tapnow-compose-dot {
+  display: none;
+}
+
+.tapnow-compose-controls .tapnow-menu-wrap,
+.tapnow-compose-actions .tapnow-menu-wrap {
+  flex: 0 0 auto;
+}
+
+.tapnow-menu-wrap {
+  position: relative;
+}
+
+.tapnow-menu-trigger {
+  display: inline-flex;
+  height: 38px;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  padding: 0 10px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 16px;
+  font-weight: 650;
+  white-space: nowrap;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease;
+}
+
+.tapnow-menu-trigger:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.tapnow-menu-list {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  z-index: 90;
+  display: grid;
+  min-width: 100%;
+  gap: 4px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(18, 20, 25, 0.96);
+  padding: 6px;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(18px);
+}
+
+.tapnow-menu-item {
+  min-height: 34px;
+  border-radius: 10px;
+  padding: 0 12px;
+  text-align: left;
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 14px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.tapnow-menu-item:hover,
+.tapnow-menu-item[data-active="true"] {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.tapnow-reference-menu-wrap {
+  position: relative;
+}
+
+.tapnow-reference-menu {
+  position: absolute;
+  left: 56px;
+  top: 0;
+  z-index: 100;
+  width: 280px;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(18, 20, 25, 0.96);
+  padding: 8px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(18px);
+}
+
+.tapnow-reference-menu-item {
+  display: flex;
+  min-width: 0;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  border-radius: 12px;
+  padding: 8px;
+  transition: background 150ms ease;
+}
+
+.tapnow-reference-menu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.tapnow-compose-dot {
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.tapnow-compose-divider {
+  height: 24px;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.13);
+}
+
+.tapnow-compose-submit {
+  display: inline-flex;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 88px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08)),
+    rgba(255, 255, 255, 0.14);
+  padding: 0 14px;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition:
+    background 150ms ease,
+    transform 150ms ease;
+}
+
+.tapnow-compose-submit:hover {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.12)),
+    rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+.tapnow-compose-submit:disabled {
+  cursor: wait;
+  opacity: 0.78;
+  transform: none;
+}
+
+.tapnow-cost-pill {
+  display: inline-flex;
+  height: 34px;
+  min-width: 56px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(103, 232, 249, 0.18);
+  background: rgba(103, 232, 249, 0.08);
+  color: rgba(207, 250, 254, 0.92);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.tapnow-compose-spinner {
+  height: 16px;
+  width: 16px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.26);
+  border-top-color: rgba(255, 255, 255, 0.92);
+  animation: tapnow-spin 800ms linear infinite;
+}
+
+@keyframes tapnow-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.tapnow-plus-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: #111827;
+}
+
+.tapnow-preview-node {
+  position: relative;
+  display: flex;
+  height: 100%;
+  min-height: 240px;
+  min-width: 260px;
+  width: 100%;
+  flex-direction: column;
+  overflow: visible;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.115), rgba(255, 255, 255, 0.05)),
+    rgba(9, 11, 16, 0.78);
+  color: white;
+  box-shadow:
+    0 28px 60px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(22px);
+}
+
+.tapnow-preview-header {
+  display: flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 12px 10px 16px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.tapnow-preview-frame {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.03) 52%, rgba(0, 0, 0, 0.3)),
+    rgba(0, 0, 0, 0.18);
+}
+
+.tapnow-preview-action {
+  display: inline-flex;
+  height: 32px;
+  width: 32px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.32);
+  color: rgba(255, 255, 255, 0.82);
+  transition:
+    background 150ms ease,
+    color 150ms ease,
+    transform 150ms ease;
+}
+
+.tapnow-preview-action:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.tapnow-resize-line {
+  border-color: rgba(103, 232, 249, 0.65) !important;
+}
+
+.tapnow-resize-handle {
+  height: 10px !important;
+  width: 10px !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+  border-radius: 999px !important;
+  background: #67e8f9 !important;
+  box-shadow: 0 0 18px rgba(103, 232, 249, 0.45);
+}
