@@ -60,16 +60,26 @@ async function persistGeneratedImages(input: {
 
   return await Promise.all(
     input.images.map(async (image, index) => {
-      const stored = await persistImageSourceToObjectStorage({
-        imageUrlOrDataUrl: image.imageUrl,
-        fileName: `${input.taskId}-${index + 1}.png`,
-        folder: `users/${input.userId}/generations/${input.taskId}`
-      });
+      try {
+        const stored = await persistImageSourceToObjectStorage({
+          imageUrlOrDataUrl: image.imageUrl,
+          fileName: `${input.taskId}-${index + 1}.png`,
+          folder: `users/${input.userId}/generations/${input.taskId}`
+        });
 
-      return {
-        imageUrl: stored.url,
-        mimeType: stored.contentType
-      };
+        return {
+          imageUrl: stored.url,
+          mimeType: stored.contentType
+        };
+      } catch (error) {
+        console.error("generated image storage failed; using provider image url", {
+          taskId: input.taskId,
+          index,
+          error
+        });
+
+        return image;
+      }
     })
   );
 }
@@ -137,7 +147,7 @@ export async function processGenerationTask(task: GenerationTask) {
     const latestTask = await getTask(task.id);
     const attemptTask = latestTask ?? processingTask;
     const attempts = attemptTask.attempts ?? processingTask.attempts ?? 1;
-    const maxAttempts = attemptTask.maxAttempts ?? 3;
+    const maxAttempts = attemptTask.maxAttempts ?? 1;
 
     if (attemptTask.cancelRequested || attempts >= maxAttempts) {
       await markTaskFailed(attemptTask, message);

@@ -1012,7 +1012,7 @@ export async function createGenerationTask(input: {
     count: input.resolved.count ?? 1,
     costCredits,
     attempts: 0,
-    maxAttempts: Number(process.env.IMAGE_TASK_MAX_ATTEMPTS ?? 3),
+    maxAttempts: Number(process.env.IMAGE_TASK_MAX_ATTEMPTS ?? 1),
     timeoutMs: Number(process.env.IMAGE_TASK_TIMEOUT_MS ?? 180000),
     queuedAt: now(),
     createdAt: now(),
