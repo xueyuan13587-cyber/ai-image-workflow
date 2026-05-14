@@ -45,7 +45,24 @@ const STYLE_TEXT: Record<string, string> = {
   "designer-toy": "designer art toy aesthetic, trendy collectible figure, bold silhouette, polished toy photography",
   watercolor: "watercolor painting, soft pigment edges, handmade texture",
   realistic: "photorealistic, natural lighting, accurate materials, lifelike detail, realistic camera depth",
-  clay: "claymation style, handmade clay texture, soft rounded shapes, tactile sculpted surface"
+  clay: "claymation style, handmade clay texture, soft rounded shapes, tactile sculpted surface",
+  editorial: "editorial magazine photography, refined fashion lighting, clean composition, polished color grading",
+  anime: "anime illustration, expressive character design, crisp linework, vibrant color",
+  "电影感": "cinematic lighting, high detail, dramatic composition",
+  "社论": "editorial magazine photography, refined fashion lighting, clean composition, polished color grading",
+  "动漫插画": "anime illustration, expressive character design, crisp linework, vibrant color",
+  "产品": "premium product render, studio lighting, sharp focus",
+  "水彩画": "watercolor painting, soft pigment edges, handmade texture",
+  "宫崎骏": "warm hand-painted animation background style, gentle natural light, whimsical atmosphere, soft painterly detail",
+  "赛博朋克": "cyberpunk neon city mood, high contrast lighting, futuristic tech details, electric color accents",
+  "泡泡玛特": "cute collectible blind-box toy aesthetic, rounded character forms, glossy vinyl material, playful studio look",
+  "日漫": "Japanese anime key visual style, clean expressive character design, crisp linework, vibrant color",
+  "产品摄影": "premium product render, studio lighting, sharp focus",
+  "苹果广告": "minimal premium technology advertising style, clean white space, elegant product focus, soft natural shadows",
+  "潮玩": "designer art toy aesthetic, trendy collectible figure, bold silhouette, polished toy photography",
+  "水彩": "watercolor painting, soft pigment edges, handmade texture",
+  "写实": "photorealistic, natural lighting, accurate materials, lifelike detail, realistic camera depth",
+  "粘土": "claymation style, handmade clay texture, soft rounded shapes, tactile sculpted surface"
 };
 
 function assertNodeExists(

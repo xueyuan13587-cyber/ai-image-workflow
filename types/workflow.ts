@@ -63,7 +63,24 @@ export type ImageGenerateData = {
     | "designer-toy"
     | "watercolor"
     | "realistic"
-    | "clay";
+    | "clay"
+    | "editorial"
+    | "anime"
+    | "电影感"
+    | "社论"
+    | "动漫插画"
+    | "产品"
+    | "水彩画"
+    | "宫崎骏"
+    | "赛博朋克"
+    | "泡泡玛特"
+    | "日漫"
+    | "产品摄影"
+    | "苹果广告"
+    | "潮玩"
+    | "水彩"
+    | "写实"
+    | "粘土";
   aspectRatio: ImageAspectRatio;
   resolution: "1K" | "2K" | "4K";
   detail: "low" | "medium" | "high";
