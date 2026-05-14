@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { getSessionFromCookieHeader } from "@/lib/auth";
-import { getUserCredits, getUserTasks, isAdminUser } from "@/lib/platform";
+import { getSessionFromCookieHeader } from "@/modules/auth/server/auth";
+import { isAdminUser } from "@/modules/admin/server/admin-service";
+import { getUserCredits } from "@/modules/billing/server/billing-service";
+import { getUserTasks } from "@/modules/generation/server/task-service";
 
 export const runtime = "nodejs";
 

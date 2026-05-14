@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { getSessionFromCookieHeader } from "@/lib/auth";
-import { createRechargeOrder, getUserRechargeOrders } from "@/lib/platform";
+import { getSessionFromCookieHeader } from "@/modules/auth/server/auth";
+import { createRechargeOrder, getUserRechargeOrders } from "@/modules/billing/server/billing-service";
 
 export const runtime = "nodejs";
 

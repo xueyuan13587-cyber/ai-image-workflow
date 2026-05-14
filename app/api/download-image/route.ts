@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getSessionFromCookieHeader } from "@/lib/auth";
+import { getSessionFromCookieHeader } from "@/modules/auth/server/auth";
 
 export const runtime = "nodejs";
 

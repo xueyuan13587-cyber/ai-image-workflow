@@ -52,7 +52,18 @@ export type ImageGenerateData = {
   label: string;
   model: ImageModel;
   prompt: string;
-  preset: "cinematic" | "editorial" | "anime" | "product" | "watercolor";
+  preset:
+    | "ghibli"
+    | "cyberpunk"
+    | "popmart"
+    | "japanese-anime"
+    | "cinematic"
+    | "product"
+    | "apple-ad"
+    | "designer-toy"
+    | "watercolor"
+    | "realistic"
+    | "clay";
   aspectRatio: ImageAspectRatio;
   resolution: "1K" | "2K" | "4K";
   detail: "low" | "medium" | "high";
@@ -107,6 +118,23 @@ export type RunWorkflowResponse = {
     generateNodeId?: string;
     provider: "openai";
     model: string;
+    assets?: ImageAsset[];
+  };
+};
+
+export type QueuedWorkflowResponse = {
+  workflow: WorkflowJson;
+  queued: true;
+  task: {
+    id: string;
+    status: "pending" | "processing" | "success" | "failed";
+    feature: string;
+    costCredits: number;
+    refundedCredits?: number;
+  };
+  billing?: {
+    creditsBefore?: number;
+    creditsAfter?: number;
   };
 };
 
@@ -116,4 +144,38 @@ export type ImageHistoryItem = {
   prompt: string;
   model: string;
   createdAt: string;
+};
+
+export type ImageAsset = {
+  id: string;
+  userId: string;
+  imageUrl: string;
+  mimeType: string;
+  prompt: string;
+  originalPrompt: string;
+  model: string;
+  provider: "openai";
+  taskId?: string;
+  workflow: WorkflowJson;
+  parameters: {
+    aspectRatio?: string;
+    resolution?: string;
+    detail?: string;
+    count?: number;
+    preset?: string;
+    feature?: string;
+    costCredits?: number;
+  };
+  referenceImages: Array<{
+    refName: string;
+    imageUrl: string;
+    mimeType?: string;
+    fileName?: string;
+  }>;
+  favorite: boolean;
+  deleted: boolean;
+  downloadedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
 };

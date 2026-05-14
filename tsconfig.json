@@ -27,6 +27,7 @@
     "node_modules",
     ".next",
     "github-upload",
+    "upload",
     "upload_*",
     "share-dist",
     "desktop-dist"

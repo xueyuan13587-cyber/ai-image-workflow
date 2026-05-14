@@ -4,8 +4,8 @@ import {
   createSessionToken,
   getSessionCookieOptions,
   SESSION_COOKIE
-} from "@/lib/auth";
-import { validateUserLogin } from "@/lib/users";
+} from "@/modules/auth/server/auth";
+import { validateUserLogin } from "@/modules/auth/server/users";
 
 export const runtime = "nodejs";
 

@@ -1,8 +1,8 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { LoginForm } from "@/components/login-form";
-import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
+import { LoginForm } from "@/modules/auth/components/login-form";
+import { SESSION_COOKIE, verifySessionToken } from "@/modules/auth/server/auth";
 
 export default async function LoginPage() {
   const cookieStore = await cookies();

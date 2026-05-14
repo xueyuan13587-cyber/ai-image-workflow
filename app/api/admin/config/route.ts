@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getSessionFromCookieHeader } from "@/lib/auth";
+import { getSessionFromCookieHeader } from "@/modules/auth/server/auth";
 import {
   getAdminOverview,
   isAdminUser,
@@ -8,8 +8,8 @@ import {
   saveModelPricing,
   savePricingRules,
   saveRechargePlans
-} from "@/lib/platform";
-import { storeSet } from "@/lib/redis-store";
+} from "@/modules/admin/server/admin-service";
+import { storeSet } from "@/modules/queue/server/redis-store";
 
 export const runtime = "nodejs";
 

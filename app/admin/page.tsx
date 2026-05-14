@@ -2,10 +2,10 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { AdminRechargePanel } from "@/components/admin-recharge-panel";
-import { AdminPlatformPanel } from "@/components/admin-platform-panel";
-import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
-import { getAdminOverview, isAdminUser } from "@/lib/platform";
+import { AdminRechargePanel } from "@/modules/admin/components/admin-recharge-panel";
+import { AdminPlatformPanel } from "@/modules/admin/components/admin-platform-panel";
+import { SESSION_COOKIE, verifySessionToken } from "@/modules/auth/server/auth";
+import { getAdminOverview, isAdminUser } from "@/modules/admin/server/admin-service";
 
 export default async function AdminPage() {
   const cookieStore = await cookies();

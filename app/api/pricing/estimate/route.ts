@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { getSessionFromCookieHeader } from "@/lib/auth";
-import { calculateTaskCost, detectGenerationFeature } from "@/lib/platform";
-import { resolveImageWorkflow } from "@/lib/workflow/runner";
-import { workflowSchema } from "@/lib/workflow/schema";
+import { getSessionFromCookieHeader } from "@/modules/auth/server/auth";
+import { calculateTaskCost } from "@/modules/billing/server/billing-service";
+import { detectGenerationFeature } from "@/modules/generation/server/task-service";
+import { resolveImageWorkflow } from "@/modules/workflow/server/runner";
+import { workflowSchema } from "@/modules/workflow/server/schema";
 import type { WorkflowJson } from "@/types/workflow";
 
 export const runtime = "nodejs";

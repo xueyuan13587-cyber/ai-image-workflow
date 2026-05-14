@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { getSessionFromCookieHeader } from "@/lib/auth";
+import { getSessionFromCookieHeader } from "@/modules/auth/server/auth";
+import { getAdminOverview, isAdminUser } from "@/modules/admin/server/admin-service";
 import {
   approveRechargeOrder,
-  getAdminOverview,
-  isAdminUser,
   rejectRechargeOrder
-} from "@/lib/platform";
+} from "@/modules/billing/server/billing-service";
 
 export const runtime = "nodejs";
 

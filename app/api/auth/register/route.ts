@@ -4,8 +4,8 @@ import {
   createSessionToken,
   getSessionCookieOptions,
   SESSION_COOKIE
-} from "@/lib/auth";
-import { createUser } from "@/lib/users";
+} from "@/modules/auth/server/auth";
+import { createUser } from "@/modules/auth/server/users";
 
 export const runtime = "nodejs";
 
